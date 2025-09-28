@@ -1,5 +1,7 @@
 namespace RestSQL.Config;
 
 public record Endpoint(
-    string Path
+    string Path,
+    string Sql,
+    Dictionary<string, object> Parameters
 );
