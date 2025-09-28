@@ -6,7 +6,7 @@ namespace RestSQL.Data;
 
 public class QueryDispatcher
 {
-    private readonly Dictionary<string, (string connectionstring, IQueryExecutor queryExecutor)> queryExecutors = [];
+    private readonly Dictionary<string, ConnectionWithExecutor> connectionExecutors = [];
 
     public QueryDispatcher(IList<Connection> connections, IList<IQueryExecutor> queryExecutors)
     {
@@ -17,23 +17,25 @@ public class QueryDispatcher
 
     public Task<IEnumerable<dynamic>> QueryAsync(string connectionName, string sql, object? parameters)
     {
-        bool found = queryExecutors.TryGetValue(connectionName, out var queryExecutor);
+        connectionExecutors.TryGetValue(connectionName, out var connectionWithExecutor);
 
-        if (!found)
+        if (connectionWithExecutor == null)
             throw new KeyNotFoundException($"Query executor for connection {connectionName} not found");
 
-        return queryExecutor.queryExecutor.QueryAsync(queryExecutor.connectionstring, sql, parameters);
+        return connectionWithExecutor.QueryExecutor.QueryAsync(connectionWithExecutor.Connection.ConnectionString, sql, parameters);
     }
 
-    private void InitializeExecutors(IList<Connection> connections, IList<IQueryExecutor> supportedQueryExecutors)
+    private void InitializeExecutors(IList<Connection> connections, IList<IQueryExecutor> queryExecutors)
     {
         foreach (var connection in connections)
         {
             var queryExecutor =
-                supportedQueryExecutors.SingleOrDefault(e => e.Type == connection.Type)
+                queryExecutors.SingleOrDefault(e => e.Type == connection.Type)
                 ?? throw new KeyNotFoundException($"Query executor for database type {connection.Type} not found");
 
-            queryExecutors.Add(connection.Name, (connection.ConnectionString, queryExecutor));
+            connectionExecutors.Add(connection.Name, new ConnectionWithExecutor(connection, queryExecutor));
         }
     }
+
+    private record ConnectionWithExecutor(Connection Connection, IQueryExecutor QueryExecutor);
 }
