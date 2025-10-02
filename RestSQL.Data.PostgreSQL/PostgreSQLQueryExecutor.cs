@@ -2,7 +2,7 @@ using System;
 using Dapper;
 using Npgsql;
 using RestSQL.Config;
-using RestSQL.Data.Interfaces;
+using RestSQL.Data.QueryExecution;
 
 namespace RestSQL.Data.PostgreSQL;
 

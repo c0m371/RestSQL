@@ -1,12 +1,13 @@
 using System;
+using RestSQL.Application.Interfaces;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace RestSQL.Application;
 
-public class YamlConfigReader(string path) : IConfigReader
+public class YamlConfigReader : IYamlConfigReader
 {
-    public Task<Config.Config> ReadAsync()
+    public Task<Config.Config> ReadAsync(string path)
     {
         if (!Directory.Exists(path))
             throw new ArgumentException($"Path {path} does not exist", nameof(path));

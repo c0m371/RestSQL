@@ -12,7 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../RestSQL.Config/RestSQL.Config.csproj" />
-    <ProjectReference Include="../RestSQL.Data.Interfaces/RestSQL.Data.Interfaces.csproj" />
+    <ProjectReference Include="../RestSQL.Data.QueryExecution/RestSQL.Data.QueryExecution.csproj" />
     <ProjectReference Include="../RestSQL.Data.PostgreSQL/RestSQL.Data.PostgreSQL.csproj" />
   </ItemGroup>
 

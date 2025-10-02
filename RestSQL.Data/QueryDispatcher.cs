@@ -1,28 +1,25 @@
 using System;
 using RestSQL.Config;
 using RestSQL.Data.Interfaces;
+using RestSQL.Data.QueryExecution;
 
 namespace RestSQL.Data;
 
-public class QueryDispatcher
+public class QueryDispatcher : IQueryDispatcher
 {
-    private readonly Dictionary<string, ConnectionWithExecutor> connectionExecutors = [];
+    private readonly Dictionary<string, ConnectionWithExecutor> connectionsWithExecutors = [];
 
     public QueryDispatcher(IList<Connection> connections, IList<IQueryExecutor> queryExecutors)
     {
         InitializeExecutors(connections, queryExecutors);
     }
 
-
-
-    public Task<IEnumerable<dynamic>> QueryAsync(string connectionName, string sql, object? parameters)
+    public async Task<IEnumerable<dynamic>> QueryAsync(string connectionName, string sql, object? parameters)
     {
-        connectionExecutors.TryGetValue(connectionName, out var connectionWithExecutor);
+        if (!connectionsWithExecutors.TryGetValue(connectionName, out var connectionWithExecutor))
+            throw new KeyNotFoundException($"Query executor for connection '{connectionName}' not found.");
 
-        if (connectionWithExecutor == null)
-            throw new KeyNotFoundException($"Query executor for connection {connectionName} not found");
-
-        return connectionWithExecutor.QueryExecutor.QueryAsync(connectionWithExecutor.Connection.ConnectionString, sql, parameters);
+        return await connectionWithExecutor.QueryExecutor.QueryAsync(connectionWithExecutor.Connection.ConnectionString, sql, parameters).ConfigureAwait(false);
     }
 
     private void InitializeExecutors(IList<Connection> connections, IList<IQueryExecutor> queryExecutors)
@@ -33,7 +30,7 @@ public class QueryDispatcher
                 queryExecutors.SingleOrDefault(e => e.Type == connection.Type)
                 ?? throw new KeyNotFoundException($"Query executor for database type {connection.Type} not found");
 
-            connectionExecutors.Add(connection.Name, new ConnectionWithExecutor(connection, queryExecutor));
+            connectionsWithExecutors.Add(connection.Name, new ConnectionWithExecutor(connection, queryExecutor));
         }
     }
 

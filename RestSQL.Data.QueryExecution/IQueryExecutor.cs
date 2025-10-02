@@ -1,7 +1,7 @@
 using System;
 using RestSQL.Config;
 
-namespace RestSQL.Data.Interfaces;
+namespace RestSQL.Data.QueryExecution;
 
 public interface IQueryExecutor
 {

@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../RestSQL.Data.Interfaces/RestSQL.Data.Interfaces.csproj" />
+    <ProjectReference Include="../RestSQL.Data.QueryExecution/RestSQL.Data.QueryExecution.csproj" />
   </ItemGroup>
 
 </Project>
