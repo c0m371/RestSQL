@@ -5,5 +5,5 @@ namespace RestSQL.Application.Interfaces;
 
 public interface IResultAggregator
 {
-    JsonNode? Aggregate(IDictionary<string, IEnumerable<dynamic>> queryResults, OutputField jsonStructure);
+    JsonNode? Aggregate(IDictionary<string, IEnumerable<IDictionary<string, object?>>> queryResults, OutputField jsonStructure);
 }

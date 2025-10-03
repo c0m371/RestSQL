@@ -1,5 +1,6 @@
 using System;
-using System.ComponentModel;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Nodes;
 using RestSQL.Application.Interfaces;
 using RestSQL.Config;
@@ -8,7 +9,9 @@ namespace RestSQL.Application;
 
 public class ResultAggregator : IResultAggregator
 {
-    public JsonNode? Aggregate(IDictionary<string, IEnumerable<dynamic>> queryResults, OutputField jsonStructure)
+    public JsonNode? Aggregate(
+        IDictionary<string, IEnumerable<IDictionary<string, object?>>> queryResults,
+        OutputField jsonStructure)
     {
         if (jsonStructure.IsArray)
             return ProcessArray(queryResults, jsonStructure, null);
@@ -20,77 +23,86 @@ public class ResultAggregator : IResultAggregator
             throw new ArgumentException($"Query result {jsonStructure.QueryName} not found", nameof(jsonStructure));
 
         var firstResult = queryResult.FirstOrDefault();
-
         if (firstResult == null)
             return null;
 
         return ProcessRow(queryResults, firstResult, jsonStructure);
     }
 
-    private JsonArray ProcessArray(IDictionary<string, IEnumerable<dynamic>> allQueryResults, OutputField field, object? linkValue)
+    private JsonArray ProcessArray(
+        IDictionary<string, IEnumerable<IDictionary<string, object?>>> allQueryResults,
+        OutputField field,
+        object? linkValue)
     {
         if (field.QueryName == null)
-            throw new ArgumentException("Array field must have query name defined", nameof(field));
+            throw new ArgumentException($"Array field '{field.Name ?? "<unnamed>"}' must have QueryName defined", nameof(field));
 
         if (!allQueryResults.TryGetValue(field.QueryName, out var queryResult))
             throw new ArgumentException($"Query result {field.QueryName} not found", nameof(field));
 
         if (field.LinkColumn != null)
-            queryResult = queryResult.Where(q => q[field.LinkColumn] == linkValue);
+            queryResult = queryResult.Where(q => GetValue(q, field.LinkColumn) == linkValue);
 
-        var allResults = queryResult.Select(r => ProcessRow(allQueryResults, r, field)).ToList();
-        var jsonArray = new JsonArray();
-
-        foreach (var result in allResults)
-            jsonArray.Add(result);
-
-        return jsonArray;
+        return new JsonArray(queryResult.Select(r => ProcessRow(allQueryResults, r, field)).ToArray());
     }
 
-    private JsonObject ProcessRow(IDictionary<string, IEnumerable<dynamic>> allQueryResults, dynamic result, OutputField field)
+    private JsonNode? ProcessRow(
+        IDictionary<string, IEnumerable<IDictionary<string, object?>>> allQueryResults,
+        IDictionary<string, object?> result,
+        OutputField field)
     {
         if (field.Type == OutputFieldType.Object)
         {
             if (field.Fields == null)
-                throw new ArgumentException("Object type must have fields defined", nameof(field));
+                throw new ArgumentException($"Object field '{field.Name ?? "<unnamed>"}' must have Fields defined", nameof(field));
 
             var jsonObject = new JsonObject();
+
             foreach (var subField in field.Fields)
             {
                 if (subField.Name == null)
-                    throw new ArgumentException("Field name cannot be null", nameof(field));
+                    throw new ArgumentException("Field name cannot be null", nameof(subField));
 
                 if (subField.IsArray)
-                    jsonObject.Add(subField.Name, ProcessArray(allQueryResults, subField, result[subField.LinkColumn]));
+                {
+                    jsonObject[subField.Name] = ProcessArray(
+                        allQueryResults,
+                        subField,
+                        subField.LinkColumn != null ? GetValue(result, subField.LinkColumn) : null
+                    );
+                }
                 else
-                    jsonObject.Add(subField.Name, ProcessRow(allQueryResults, result, subField));
+                {
+                    jsonObject[subField.Name] = ProcessRow(allQueryResults, result, subField);
+                }
             }
 
             return jsonObject;
         }
-        else
-        {
-            return GetPrimitiveValue(result, field);
-        }
+
+        // Primitive case (can appear at root or inside an array)
+        return GetPrimitiveValue(result, field);
     }
 
-    private object GetPrimitiveValue(dynamic result, OutputField field)
+    private JsonNode? GetPrimitiveValue(IDictionary<string, object?> row, OutputField field)
     {
         var columnName = field.ColumnName
             ?? throw new ArgumentException($"ColumnName must be defined for primitive type {field.Type}", nameof(field));
 
-        // NOTE: Accessing result[columnName] with dynamic will throw a RuntimeBinderException
-        // if the column doesn't exist, which is generally acceptable for this scenario.
-        var rawValue = result[columnName];
+        var rawValue = GetValue(row, columnName);
+        if (rawValue is null or DBNull) return null;
 
         return field.Type switch
         {
-            OutputFieldType.Long => Convert.ToInt64(rawValue),
-            OutputFieldType.Decimal => Convert.ToDecimal(rawValue),
-            OutputFieldType.String => Convert.ToString(rawValue),
-            OutputFieldType.Date => Convert.ToDateTime(rawValue),
-            OutputFieldType.Boolean => Convert.ToBoolean(rawValue),
+            OutputFieldType.Long => JsonValue.Create(Convert.ToInt64(rawValue)),
+            OutputFieldType.Decimal => JsonValue.Create(Convert.ToDecimal(rawValue)),
+            OutputFieldType.String => JsonValue.Create(Convert.ToString(rawValue)),
+            OutputFieldType.Date => JsonValue.Create(Convert.ToDateTime(rawValue)),
+            OutputFieldType.Boolean => JsonValue.Create(Convert.ToBoolean(rawValue)),
             _ => throw new ArgumentException($"Unsupported primitive type {field.Type}", nameof(field))
         };
     }
+
+    private static object? GetValue(IDictionary<string, object?> row, string columnName)
+        => row.TryGetValue(columnName, out var value) ? value : null;
 }
