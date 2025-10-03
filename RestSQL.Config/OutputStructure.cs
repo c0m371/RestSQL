@@ -6,6 +6,7 @@ public record OutputField(
     string? Name,
     string? ColumnName,
     string? QueryName,
+    string? LinkColumn,
     IList<OutputField>? Fields
 );
 
