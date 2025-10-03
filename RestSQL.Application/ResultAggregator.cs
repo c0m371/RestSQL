@@ -58,9 +58,9 @@ public class ResultAggregator : IResultAggregator
                     throw new ArgumentException("Field name cannot be null", nameof(field));
                     
                 if (subField.IsArray)
-                    jsonObject.Add(subField.Name, ProcessArray(allQueryResults, field));
+                    jsonObject.Add(subField.Name, ProcessArray(allQueryResults, subField));
                 else
-                    jsonObject.Add(subField.Name, ProcessRow(allQueryResults, result, field));
+                    jsonObject.Add(subField.Name, ProcessRow(allQueryResults, result, subField));
             }
 
             return jsonObject;
