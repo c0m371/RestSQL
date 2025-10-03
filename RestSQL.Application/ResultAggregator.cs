@@ -8,12 +8,23 @@ namespace RestSQL.Application;
 
 public class ResultAggregator : IResultAggregator
 {
-    public object? Aggregate(IDictionary<string, IEnumerable<dynamic>> queryResults, OutputField jsonStructure)
+    public JsonNode? Aggregate(IDictionary<string, IEnumerable<dynamic>> queryResults, OutputField jsonStructure)
     {
         if (jsonStructure.IsArray)
-            return ProcessArray(queryResults, queryResults[jsonStructure.QueryName], jsonStructure.Type, jsonStructure.Fields);
+            return ProcessArray(queryResults, jsonStructure);
+        
+        if (jsonStructure.QueryName == null)
+            throw new ArgumentException("Array field must have query name defined", nameof(jsonStructure));
 
+        if (!queryResults.TryGetValue(jsonStructure.QueryName, out var queryResult))
+            throw new ArgumentException($"Query result {jsonStructure.QueryName} not found", nameof(jsonStructure));
 
+        var firstResult = queryResult.FirstOrDefault();
+
+        if (firstResult == null)
+            return null;
+
+        return ProcessRow(queryResults, firstResult, jsonStructure);
     }
 
     private JsonArray ProcessArray(IDictionary<string, IEnumerable<dynamic>> allQueryResults, OutputField field)
@@ -43,6 +54,9 @@ public class ResultAggregator : IResultAggregator
             var jsonObject = new JsonObject();
             foreach (var subField in field.Fields)
             {
+                if (subField.Name == null)
+                    throw new ArgumentException("Field name cannot be null", nameof(field));
+                    
                 if (subField.IsArray)
                     jsonObject.Add(subField.Name, ProcessArray(allQueryResults, field));
                 else
