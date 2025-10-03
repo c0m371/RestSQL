@@ -10,8 +10,9 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
 {
     public async Task<object?> GetEndpointResult(Endpoint endpoint)
     {
-        var flatResult = await queryDispatcher.QueryAsync(endpoint.ConnectionName, endpoint.Sql, endpoint.Parameters).ConfigureAwait(false);
-        var result = resultAggregator.Aggregate(flatResult, endpoint.OutputStructure);
-        return result;
+        throw new NotImplementedException();
+        // var flatResult = await queryDispatcher.QueryAsync(endpoint.ConnectionName, endpoint.Sql, endpoint.Parameters).ConfigureAwait(false);
+        // var result = resultAggregator.Aggregate(flatResult, endpoint.OutputStructure);
+        // return result;
     }
 }
