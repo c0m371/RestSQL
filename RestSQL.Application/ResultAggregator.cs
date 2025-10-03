@@ -17,14 +17,14 @@ public class ResultAggregator : IResultAggregator
             return ProcessArray(queryResults, jsonStructure, null);
 
         if (jsonStructure.QueryName == null)
-            throw new ArgumentException("Root object has no query name defined", nameof(jsonStructure));
+            throw new ArgumentException("Root object has no QueryName defined", nameof(jsonStructure));
 
         if (!queryResults.TryGetValue(jsonStructure.QueryName, out var queryResult))
-            throw new ArgumentException($"Query result {jsonStructure.QueryName} not found", nameof(jsonStructure));
+            throw new ArgumentException($"Query result '{jsonStructure.QueryName}' not found", nameof(jsonStructure));
 
         var firstResult = queryResult.FirstOrDefault();
         if (firstResult == null)
-            return null;
+            return null; 
 
         return ProcessRow(queryResults, firstResult, jsonStructure);
     }
@@ -38,10 +38,10 @@ public class ResultAggregator : IResultAggregator
             throw new ArgumentException($"Array field '{field.Name ?? "<unnamed>"}' must have QueryName defined", nameof(field));
 
         if (!allQueryResults.TryGetValue(field.QueryName, out var queryResult))
-            throw new ArgumentException($"Query result {field.QueryName} not found", nameof(field));
+            throw new ArgumentException($"Query result '{field.QueryName}' not found", nameof(field));
 
         if (field.LinkColumn != null)
-            queryResult = queryResult.Where(q => GetValue(q, field.LinkColumn) == linkValue);
+            queryResult = queryResult.Where(q => Equals(GetValue(q, field.LinkColumn), linkValue));
 
         return new JsonArray(queryResult.Select(r => ProcessRow(allQueryResults, r, field)).ToArray());
     }
@@ -60,27 +60,38 @@ public class ResultAggregator : IResultAggregator
 
             foreach (var subField in field.Fields)
             {
-                if (subField.Name == null)
-                    throw new ArgumentException("Field name cannot be null", nameof(subField));
-
                 if (subField.IsArray)
                 {
-                    jsonObject[subField.Name] = ProcessArray(
-                        allQueryResults,
-                        subField,
-                        subField.LinkColumn != null ? GetValue(result, subField.LinkColumn) : null
-                    );
+                    if (subField.Name == null)
+                        throw new ArgumentException("Array fields inside objects must have a Name defined", nameof(subField));
+
+                    jsonObject[subField.Name] =
+                        ProcessArray(
+                            allQueryResults,
+                            subField,
+                            subField.LinkColumn != null ? GetValue(result, subField.LinkColumn) : null
+                        );
+                }
+                else if (subField.Type == OutputFieldType.Object)
+                {
+                    if (subField.Name == null)
+                        throw new ArgumentException("Object fields inside objects must have a Name defined", nameof(subField));
+
+                    jsonObject[subField.Name] = ProcessRow(allQueryResults, result, subField);
                 }
                 else
                 {
-                    jsonObject[subField.Name] = ProcessRow(allQueryResults, result, subField);
+                    if (subField.Name == null)
+                        throw new ArgumentException("Primitive fields inside objects must have a Name defined", nameof(subField));
+
+                    jsonObject[subField.Name] = GetPrimitiveValue(result, subField);
                 }
             }
 
             return jsonObject;
         }
 
-        // Primitive case (can appear at root or inside an array)
+        // Primitive at root or inside array
         return GetPrimitiveValue(result, field);
     }
 
@@ -104,5 +115,9 @@ public class ResultAggregator : IResultAggregator
     }
 
     private static object? GetValue(IDictionary<string, object?> row, string columnName)
-        => row.TryGetValue(columnName, out var value) ? value : null;
+    {
+        if (!row.TryGetValue(columnName, out var value))
+            throw new ArgumentException($"Column '{columnName}' not found in query result row.");
+        return value;
+    }
 }
