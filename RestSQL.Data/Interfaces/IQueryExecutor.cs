@@ -1,6 +1,6 @@
 using RestSQL.Config;
 
-namespace RestSQL.Data.QueryExecution;
+namespace RestSQL.Data.Interfaces;
 
 public interface IQueryExecutor
 {

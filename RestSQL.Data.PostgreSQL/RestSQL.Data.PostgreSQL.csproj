@@ -12,7 +12,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../RestSQL.Data.QueryExecution/RestSQL.Data.QueryExecution.csproj" />
+    <ProjectReference Include="..\RestSQL.Config\RestSQL.Config.csproj" />
+    <ProjectReference Include="..\RestSQL.Data\RestSQL.Data.csproj" />
   </ItemGroup>
 
 </Project>

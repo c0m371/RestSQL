@@ -1,11 +1,11 @@
 using Dapper;
 using Npgsql;
 using RestSQL.Config;
-using RestSQL.Data.QueryExecution;
+using RestSQL.Data.Interfaces;
 
 namespace RestSQL.Data.PostgreSQL;
 
-public class PostgreSQLQueryExecutor : IQueryExecutor
+public class PostgreSQLQueryExecutor : IQueryDispatcher
 {
     public DatabaseType Type => DatabaseType.PostgreSQL;
 

@@ -20,10 +20,7 @@ public class ResultAggregator : IResultAggregator
             throw new ArgumentException($"Query result '{jsonStructure.QueryName}' not found", nameof(jsonStructure));
 
         var firstResult = queryResult.FirstOrDefault();
-        if (firstResult == null)
-            return null; 
-
-        return ProcessRow(queryResults, firstResult, jsonStructure);
+        return firstResult == null ? null : ProcessRow(queryResults, firstResult, jsonStructure);
     }
 
     private JsonArray ProcessArray(
@@ -40,7 +37,10 @@ public class ResultAggregator : IResultAggregator
         if (field.LinkColumn != null)
             queryResult = queryResult.Where(q => Equals(GetValue(q, field.LinkColumn), linkValue));
 
-        return new JsonArray(queryResult.Select(r => ProcessRow(allQueryResults, r, field)).ToArray());
+        var jsonArray = new JsonArray();
+        foreach (var row in queryResult)
+            jsonArray.Add(ProcessRow(allQueryResults, row, field));
+        return jsonArray;
     }
 
     private JsonNode? ProcessRow(
@@ -113,8 +113,15 @@ public class ResultAggregator : IResultAggregator
 
     private static object? GetValue(IDictionary<string, object?> row, string columnName)
     {
-        if (!row.TryGetValue(columnName, out var value))
-            throw new ArgumentException($"Column '{columnName}' not found in query result row.");
-        return value;
+        if (row.TryGetValue(columnName, out var value))
+            return value;
+
+        // Cse-insensitive fallback
+        var altKey = row.Keys.FirstOrDefault(k => string.Equals(k, columnName, StringComparison.OrdinalIgnoreCase));
+        if (altKey != null)
+            return row[altKey];
+
+        throw new ArgumentException($"Column '{columnName}' not found in query result row.");
     }
+
 }

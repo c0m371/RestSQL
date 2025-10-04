@@ -1,6 +1,5 @@
 using RestSQL.Config;
 using RestSQL.Data.Interfaces;
-using RestSQL.Data.QueryExecution;
 
 namespace RestSQL.Data;
 
