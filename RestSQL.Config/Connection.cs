@@ -1,5 +1,3 @@
-using System;
-
 namespace RestSQL.Config;
 
 public record Connection(

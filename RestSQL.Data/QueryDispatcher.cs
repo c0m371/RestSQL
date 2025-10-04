@@ -1,4 +1,3 @@
-using System;
 using RestSQL.Config;
 using RestSQL.Data.Interfaces;
 using RestSQL.Data.QueryExecution;
@@ -14,7 +13,7 @@ public class QueryDispatcher : IQueryDispatcher
         InitializeExecutors(connections, queryExecutors);
     }
 
-    public async Task<IEnumerable<dynamic>> QueryAsync(string connectionName, string sql, object? parameters)
+    public async Task<IEnumerable<IDictionary<string, object?>>> QueryAsync(string connectionName, string sql, IDictionary<string, object?> parameters)
     {
         if (!connectionsWithExecutors.TryGetValue(connectionName, out var connectionWithExecutor))
             throw new KeyNotFoundException($"Query executor for connection '{connectionName}' not found.");

@@ -1,8 +1,9 @@
+using System.Text.Json.Nodes;
 using RestSQL.Config;
 
 namespace RestSQL.Application.Interfaces;
 
 public interface IEndpointService
 {
-    Task<object?> GetEndpointResult(Endpoint endpoint);
+    Task<JsonNode?> GetEndpointResult(Endpoint endpoint, IDictionary<string, object?> parameterValues);
 }

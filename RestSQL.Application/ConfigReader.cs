@@ -1,4 +1,3 @@
-using System;
 using RestSQL.Application.Interfaces;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;

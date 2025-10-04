@@ -1,4 +1,3 @@
-using System;
 using RestSQL.Config;
 
 namespace RestSQL.Data.QueryExecution;
@@ -6,5 +5,5 @@ namespace RestSQL.Data.QueryExecution;
 public interface IQueryExecutor
 {
     DatabaseType Type { get; }
-    Task<IEnumerable<dynamic>> QueryAsync(string connectionString, string sql, object? param);
+    Task<IEnumerable<IDictionary<string, object?>>> QueryAsync(string connectionString, string sql, IDictionary<string, object?> parameters);
 }
