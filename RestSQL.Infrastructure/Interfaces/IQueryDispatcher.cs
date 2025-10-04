@@ -1,4 +1,4 @@
-namespace RestSQL.Data.Interfaces;
+namespace RestSQL.Infrastructure.Interfaces;
 
 public interface IQueryDispatcher
 {

@@ -1,5 +1,5 @@
 using System.Text.Json.Nodes;
-using RestSQL.Config;
+using RestSQL.Domain;
 
 namespace RestSQL.Application.Interfaces;
 

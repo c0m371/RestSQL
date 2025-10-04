@@ -1,4 +1,4 @@
-namespace RestSQL.Config;
+namespace RestSQL.Domain;
 
 public enum DatabaseType
 {

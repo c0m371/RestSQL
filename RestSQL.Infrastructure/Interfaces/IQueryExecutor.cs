@@ -1,6 +1,6 @@
-using RestSQL.Config;
+using RestSQL.Domain;
 
-namespace RestSQL.Data.Interfaces;
+namespace RestSQL.Infrastructure.Interfaces;
 
 public interface IQueryExecutor
 {

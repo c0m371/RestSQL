@@ -1,7 +1,7 @@
 using Microsoft.Extensions.DependencyInjection;
-using RestSQL.Data.Interfaces;
+using RestSQL.Infrastructure.Interfaces;
 
-namespace RestSQL.Data;
+namespace RestSQL.Infrastructure;
 
 public static class ServiceCollectionExtensions
 {

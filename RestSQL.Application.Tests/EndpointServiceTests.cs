@@ -1,8 +1,8 @@
 using System.Text.Json.Nodes;
 using Moq;
 using RestSQL.Application.Interfaces;
-using RestSQL.Config;
-using RestSQL.Data.Interfaces;
+using RestSQL.Domain;
+using RestSQL.Infrastructure.Interfaces;
 
 namespace RestSQL.Application.Tests;
 

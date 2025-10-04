@@ -1,7 +1,7 @@
-using RestSQL.Config;
-using RestSQL.Data.Interfaces;
+using RestSQL.Domain;
+using RestSQL.Infrastructure.Interfaces;
 
-namespace RestSQL.Data;
+namespace RestSQL.Infrastructure;
 
 public class QueryDispatcher : IQueryDispatcher
 {

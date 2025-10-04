@@ -7,13 +7,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Api", "RestSQL.Api\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Application", "RestSQL.Application\RestSQL.Application.csproj", "{71F54A62-22A0-49B1-BC7F-1C50FA3E2641}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Data", "RestSQL.Data\RestSQL.Data.csproj", "{8D5A62BC-90A9-42F7-8584-70C32F3BE1CC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Infrastructure", "RestSQL.Infrastructure\RestSQL.Infrastructure.csproj", "{8D5A62BC-90A9-42F7-8584-70C32F3BE1CC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Data.PostgreSQL", "RestSQL.Data.PostgreSQL\RestSQL.Data.PostgreSQL.csproj", "{4D57B101-B2B7-463A-B5AB-047599A35C06}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Infrastructure.PostgreSQL", "RestSQL.Infrastructure.PostgreSQL\RestSQL.Infrastructure.PostgreSQL.csproj", "{4D57B101-B2B7-463A-B5AB-047599A35C06}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Config", "RestSQL.Config\RestSQL.Config.csproj", "{5A3FD11D-D4BC-417A-8675-AB02DDD947AC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Domain", "RestSQL.Domain\RestSQL.Domain.csproj", "{5A3FD11D-D4BC-417A-8675-AB02DDD947AC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Data.QueryExecution", "RestSQL.Data.QueryExecution\RestSQL.Data.QueryExecution.csproj", "{D8A454A6-D20E-4D0D-A9F5-C80400D6247C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Infrastructure.QueryExecution", "RestSQL.Infrastructure.QueryExecution\RestSQL.Infrastructure.QueryExecution.csproj", "{D8A454A6-D20E-4D0D-A9F5-C80400D6247C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Application.Tests", "RestSQL.Application.Tests\RestSQL.Application.Tests.csproj", "{67D8C3BE-5C5F-4489-87E4-10A6C61B5EBD}"
 EndProject

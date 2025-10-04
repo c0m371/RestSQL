@@ -11,8 +11,8 @@
   </ItemGroup>
   
   <ItemGroup>
-    <ProjectReference Include="../RestSQL.Config/RestSQL.Config.csproj" />
-    <ProjectReference Include="../RestSQL.Data/RestSQL.Data.csproj" />
+    <ProjectReference Include="..\RestSQL.Domain\RestSQL.Domain.csproj" />
+    <ProjectReference Include="..\RestSQL.Infrastructure\RestSQL.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>

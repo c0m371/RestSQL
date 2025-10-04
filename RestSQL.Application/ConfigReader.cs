@@ -1,4 +1,5 @@
 using RestSQL.Application.Interfaces;
+using RestSQL.Domain;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -6,7 +7,7 @@ namespace RestSQL.Application;
 
 public class YamlConfigReader : IYamlConfigReader
 {
-    public Task<Config.Config> ReadAsync(string path)
+    public Task<Config> ReadAsync(string path)
     {
         if (!Directory.Exists(path))
             throw new ArgumentException($"Path {path} does not exist", nameof(path));
@@ -23,12 +24,12 @@ public class YamlConfigReader : IYamlConfigReader
         var allConfigs = files.Select(file =>
         {
             using var reader = new StreamReader(file);
-            return deserializer.Deserialize<Config.Config>(reader);
+            return deserializer.Deserialize<Config>(reader);
         });
 
         //TODO validation (no duplicates, ...)
 
-        var mergedConfig = new Config.Config(
+        var mergedConfig = new Config(
             [.. allConfigs.SelectMany(c => c.Connections)],
             [.. allConfigs.SelectMany(c => c.Endpoints)]
         );
