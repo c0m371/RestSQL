@@ -5,7 +5,7 @@ using RestSQL.Infrastructure.Interfaces;
 
 namespace RestSQL.Infrastructure.PostgreSQL;
 
-public class PostgreSQLQueryExecutor : IQueryDispatcher
+public class PostgreSQLQueryExecutor : IQueryExecutor
 {
     public DatabaseType Type => DatabaseType.PostgreSQL;
 

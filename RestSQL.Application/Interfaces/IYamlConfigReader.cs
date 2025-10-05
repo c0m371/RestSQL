@@ -4,5 +4,5 @@ namespace RestSQL.Application.Interfaces;
 
 public interface IYamlConfigReader
 {
-    Task<Config> ReadAsync(string path);
+    Config Read(string path);
 }

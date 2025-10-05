@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RestSQL.Application\RestSQL.Application.csproj" />
+    <ProjectReference Include="..\RestSQL.Domain\RestSQL.Domain.csproj" />
+    <ProjectReference Include="..\RestSQL.Infrastructure.PostgreSQL\RestSQL.Infrastructure.PostgreSQL.csproj" />
+    <ProjectReference Include="..\RestSQL.Infrastructure\RestSQL.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

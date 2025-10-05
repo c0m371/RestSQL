@@ -2,7 +2,8 @@ namespace RestSQL.Domain;
 
 public record Endpoint(
     string Path,
-    Dictionary<string, UrlParameter> UrlParameters, 
+    string Verb,
+    int StatusCode,
     Dictionary<string, SqlQuery> SqlQueries, 
     OutputField OutputStructure
 );

@@ -7,7 +7,7 @@ namespace RestSQL.Application;
 
 public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator resultAggregator) : IEndpointService
 {
-    public async Task<JsonNode?> GetEndpointResult(Endpoint endpoint, IDictionary<string, object?> parameterValues)
+    public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues)
     {
         var queryTasks = endpoint.SqlQueries
             .Select(async q => new { Name = q.Key, Result = await queryDispatcher.QueryAsync(q.Value.ConnectionName, q.Value.Sql, parameterValues).ConfigureAwait(false) });

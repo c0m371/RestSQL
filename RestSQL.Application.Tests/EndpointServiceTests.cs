@@ -73,7 +73,7 @@ public class EndpointServiceTests
             .Returns(expectedJson);
 
         // Act
-        var result = await _service.GetEndpointResult(endpoint, parameters);
+        var result = await _service.GetEndpointResultAsync(endpoint, parameters);
 
         // Assert
         Assert.Equal(expectedJson, result);
@@ -109,7 +109,7 @@ public class EndpointServiceTests
             .Returns((JsonNode?)null);
 
         // Act
-        var result = await _service.GetEndpointResult(endpoint, parameters);
+        var result = await _service.GetEndpointResultAsync(endpoint, parameters);
 
         // Assert
         Assert.Null(result);
@@ -156,7 +156,7 @@ public class EndpointServiceTests
             .Returns(expectedJson);
 
         // Act
-        var result = await _service.GetEndpointResult(endpoint, parameters);
+        var result = await _service.GetEndpointResultAsync(endpoint, parameters);
 
         // Assert
         Assert.Equal(expectedJson, result);
@@ -195,7 +195,7 @@ public class EndpointServiceTests
 
         // Act + Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => _service.GetEndpointResult(endpoint, parameters));
+            () => _service.GetEndpointResultAsync(endpoint, parameters));
 
         Assert.Equal("Database failed", ex.Message);
         _resultAggregatorMock.Verify(a => a.Aggregate(It.IsAny<IDictionary<string, IEnumerable<IDictionary<string, object?>>>>(), It.IsAny<OutputField>()), Times.Never);

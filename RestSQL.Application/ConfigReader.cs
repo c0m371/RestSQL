@@ -7,7 +7,7 @@ namespace RestSQL.Application;
 
 public class YamlConfigReader : IYamlConfigReader
 {
-    public Task<Config> ReadAsync(string path)
+    public Config Read(string path)
     {
         if (!Directory.Exists(path))
             throw new ArgumentException($"Path {path} does not exist", nameof(path));
@@ -34,6 +34,6 @@ public class YamlConfigReader : IYamlConfigReader
             [.. allConfigs.SelectMany(c => c.Endpoints)]
         );
 
-        return Task.FromResult(mergedConfig);
+        return mergedConfig;
     }
 }
