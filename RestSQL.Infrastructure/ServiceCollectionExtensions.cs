@@ -1,0 +1,12 @@
+using Microsoft.Extensions.DependencyInjection;
+using RestSQL.Infrastructure.Interfaces;
+
+namespace RestSQL.Infrastructure;
+
+public static class ServiceCollectionExtensions
+{
+    public static void AddRestSQLData(this IServiceCollection serviceCollection)
+    {
+        serviceCollection.AddSingleton<IQueryDispatcher, QueryDispatcher>();
+    }
+}

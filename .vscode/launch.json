@@ -1,0 +1,11 @@
+{
+    "configurations": [
+        {
+            "name": "C#: RestSQL.Api [https]",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "${workspaceFolder}\\RestSQL.Api\\RestSQL.Api.csproj",
+            "launchConfigurationId": "TargetFramework=;https"
+        }
+    ]
+}
