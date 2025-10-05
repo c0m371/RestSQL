@@ -3,32 +3,32 @@ using RestSQL.Infrastructure.Interfaces;
 
 namespace RestSQL.Infrastructure;
 
-public class QueryDispatcher : IQueryDispatcher
+public class QueryDispatcher(IEnumerable<IQueryExecutor> queryExecutors) : IQueryDispatcher
 {
     private readonly Dictionary<string, ConnectionWithExecutor> connectionsWithExecutors = [];
-
-    public QueryDispatcher(IList<Connection> connections, IList<IQueryExecutor> queryExecutors)
-    {
-        InitializeExecutors(connections, queryExecutors);
-    }
 
     public async Task<IEnumerable<IDictionary<string, object?>>> QueryAsync(string connectionName, string sql, IDictionary<string, object?> parameters)
     {
         if (!connectionsWithExecutors.TryGetValue(connectionName, out var connectionWithExecutor))
+        {
+            if (connectionsWithExecutors.Count == 0)
+                throw new InvalidOperationException("Cannot query before InitializeExecutors were called");
+
             throw new KeyNotFoundException($"Query executor for connection '{connectionName}' not found.");
+        }
 
         return await connectionWithExecutor.QueryExecutor.QueryAsync(connectionWithExecutor.Connection.ConnectionString, sql, parameters).ConfigureAwait(false);
     }
 
-    private void InitializeExecutors(IList<Connection> connections, IList<IQueryExecutor> queryExecutors)
+    public void InitializeExecutors(IDictionary<string, Connection> connections)
     {
-        foreach (var connection in connections)
+        foreach (var kvp in connections)
         {
             var queryExecutor =
-                queryExecutors.SingleOrDefault(e => e.Type == connection.Type)
-                ?? throw new KeyNotFoundException($"Query executor for database type {connection.Type} not found");
+                queryExecutors.SingleOrDefault(e => e.Type == kvp.Value.Type)
+                ?? throw new KeyNotFoundException($"Query executor for database type {kvp.Value.Type} not found");
 
-            connectionsWithExecutors.Add(connection.Name, new ConnectionWithExecutor(connection, queryExecutor));
+            connectionsWithExecutors.Add(kvp.Key, new ConnectionWithExecutor(kvp.Value, queryExecutor));
         }
     }
 

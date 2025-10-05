@@ -1,21 +1,12 @@
 namespace RestSQL.Domain;
 
-public record OutputField(
-    OutputFieldType Type,
-    bool IsArray,
-    string? Name,
-    string? ColumnName,
-    string? QueryName,
-    string? LinkColumn,
-    IList<OutputField>? Fields
-);
-
-public enum OutputFieldType
+public record OutputField
 {
-    Long,
-    Decimal,
-    String,
-    Date,
-    Boolean,
-    Object
+    public required OutputFieldType Type { get; init; }
+    public bool IsArray { get; init; } = false;
+    public string? Name { get; init; }
+    public string? ColumnName { get; init; }
+    public string? QueryName { get; init; }
+    public string? LinkColumn { get; init; }
+    public IList<OutputField>? Fields { get; init; }
 }

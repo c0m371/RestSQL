@@ -1,5 +1,6 @@
 using System;
 using RestSQL.Application.Interfaces;
+using RestSQL.Infrastructure.Interfaces;
 
 namespace RestSQL;
 
@@ -9,8 +10,11 @@ public static class WebApplicationExtensions
     {
         var configReader = webApplication.Services.GetService<IYamlConfigReader>()
             ?? throw new InvalidOperationException("AddRestSQL has not been called on container");
+        var querydispatcher = webApplication.Services.GetService<IQueryDispatcher>()
+            ?? throw new InvalidOperationException("AddRestSQL has not been called on container");
 
         var config = configReader.Read(configFolder);
+        querydispatcher.InitializeExecutors(config.Connections);
         EndpointMapper.MapEndpoints(webApplication, config);
     }
 }

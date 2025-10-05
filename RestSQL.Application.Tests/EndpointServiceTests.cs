@@ -23,36 +23,35 @@ public class EndpointServiceTests
     public async Task GetEndpointResult_ShouldCallDispatcherAndAggregator()
     {
         // Arrange
-        var endpoint = new Endpoint(
-            Path: "/test",
-            UrlParameters: new(),
-            SqlQueries: new Dictionary<string, SqlQuery>
+        var endpoint = new Endpoint
+        {
+            Path = "/test",
+            Verb = "GET",
+            StatusCode = 200,
+            SqlQueries = new Dictionary<string, SqlQuery>
             {
-                ["query1"] = new("conn1", "SELECT * FROM table1"),
-                ["query2"] = new("conn2", "SELECT * FROM table2")
+                ["query1"] = new SqlQuery { ConnectionName = "conn1", Sql = "SELECT * FROM table1" },
+                ["query2"] = new SqlQuery { ConnectionName = "conn2", Sql = "SELECT * FROM table2" }
             },
-            OutputStructure: new(
-                Type: OutputFieldType.Object,
-                IsArray: false,
-                Name: null,
-                ColumnName: null,
-                QueryName: "query1",
-                LinkColumn: null,
-                Fields: null
-            )
-        );
+            OutputStructure = new OutputField
+            {
+                Type = OutputFieldType.Object,
+                IsArray = false,
+                QueryName = "query1"
+            }
+        };
 
         var parameters = new Dictionary<string, object?> { ["id"] = 123 };
 
         var query1Result = new List<Dictionary<string, object?>>
-            {
-                new() { ["name"] = "Alice" }
-            };
+        {
+            new() { ["name"] = "Alice" }
+        };
 
         var query2Result = new List<Dictionary<string, object?>>
-            {
-                new() { ["age"] = 30 }
-            };
+        {
+            new() { ["age"] = 30 }
+        };
 
         _queryDispatcherMock
             .Setup(q => q.QueryAsync("conn1", "SELECT * FROM table1", parameters))
@@ -85,20 +84,18 @@ public class EndpointServiceTests
     public async Task GetEndpointResult_ShouldHandleEmptySqlQueries()
     {
         // Arrange
-        var endpoint = new Endpoint(
-            Path: "/empty",
-            UrlParameters: new(),
-            SqlQueries: new(),
-            OutputStructure: new(
-                Type: OutputFieldType.Object,
-                IsArray: false,
-                Name: null,
-                ColumnName: null,
-                QueryName: null,
-                LinkColumn: null,
-                Fields: null
-            )
-        );
+        var endpoint = new Endpoint
+        {
+            Path = "/empty",
+            Verb = "GET",
+            StatusCode = 200,
+            SqlQueries = new(),
+            OutputStructure = new OutputField
+            {
+                Type = OutputFieldType.Object,
+                IsArray = false
+            }
+        };
 
         var parameters = new Dictionary<string, object?>();
 
@@ -120,23 +117,22 @@ public class EndpointServiceTests
     public async Task GetEndpointResult_ShouldSupportSingleQuery()
     {
         // Arrange
-        var endpoint = new Endpoint(
-            Path: "/single",
-            UrlParameters: new(),
-            SqlQueries: new Dictionary<string, SqlQuery>
+        var endpoint = new Endpoint
+        {
+            Path = "/single",
+            Verb = "GET",
+            StatusCode = 200,
+            SqlQueries = new Dictionary<string, SqlQuery>
             {
-                ["single"] = new("main", "SELECT 1")
+                ["single"] = new SqlQuery { ConnectionName = "main", Sql = "SELECT 1" }
             },
-            OutputStructure: new(
-                Type: OutputFieldType.Object,
-                IsArray: false,
-                Name: null,
-                ColumnName: null,
-                QueryName: "single",
-                LinkColumn: null,
-                Fields: null
-            )
-        );
+            OutputStructure = new OutputField
+            {
+                Type = OutputFieldType.Object,
+                IsArray = false,
+                QueryName = "single"
+            }
+        };
 
         var parameters = new Dictionary<string, object?>();
         var singleResult = new List<Dictionary<string, object?>> { new() { ["value"] = 1 } };
@@ -168,23 +164,22 @@ public class EndpointServiceTests
     public async Task GetEndpointResult_ShouldPropagateException_WhenQueryDispatcherThrows()
     {
         // Arrange
-        var endpoint = new Endpoint(
-            Path: "/error",
-            UrlParameters: new(),
-            SqlQueries: new Dictionary<string, SqlQuery>
+        var endpoint = new Endpoint
+        {
+            Path = "/error",
+            Verb = "GET",
+            StatusCode = 200,
+            SqlQueries = new Dictionary<string, SqlQuery>
             {
-                ["query1"] = new("conn", "SELECT fail")
+                ["query1"] = new SqlQuery { ConnectionName = "conn", Sql = "SELECT fail" }
             },
-            OutputStructure: new(
-                Type: OutputFieldType.Object,
-                IsArray: false,
-                Name: null,
-                ColumnName: null,
-                QueryName: "query1",
-                LinkColumn: null,
-                Fields: null
-            )
-        );
+            OutputStructure = new OutputField
+            {
+                Type = OutputFieldType.Object,
+                IsArray = false,
+                QueryName = "query1"
+            }
+        };
 
         var parameters = new Dictionary<string, object?>();
         var exception = new InvalidOperationException("Database failed");
@@ -198,6 +193,8 @@ public class EndpointServiceTests
             () => _service.GetEndpointResultAsync(endpoint, parameters));
 
         Assert.Equal("Database failed", ex.Message);
-        _resultAggregatorMock.Verify(a => a.Aggregate(It.IsAny<IDictionary<string, IEnumerable<IDictionary<string, object?>>>>(), It.IsAny<OutputField>()), Times.Never);
+        _resultAggregatorMock.Verify(a =>
+            a.Aggregate(It.IsAny<IDictionary<string, IEnumerable<IDictionary<string, object?>>>>(), It.IsAny<OutputField>()),
+            Times.Never);
     }
 }

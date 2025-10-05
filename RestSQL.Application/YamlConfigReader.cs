@@ -18,7 +18,7 @@ public class YamlConfigReader : IYamlConfigReader
             throw new ArgumentException($"Directory {path} doesn't contain yaml files", nameof(path));
 
         var deserializer = new DeserializerBuilder()
-            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+            .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .Build();
 
         var allConfigs = files.Select(file =>
@@ -29,10 +29,11 @@ public class YamlConfigReader : IYamlConfigReader
 
         //TODO validation (no duplicates, ...)
 
-        var mergedConfig = new Config(
-            [.. allConfigs.SelectMany(c => c.Connections)],
-            [.. allConfigs.SelectMany(c => c.Endpoints)]
-        );
+        var mergedConfig = new Config
+        {
+            Connections = allConfigs.SelectMany(c => c.Connections).ToDictionary(),
+            Endpoints = [.. allConfigs.SelectMany(c => c.Endpoints)]
+        };
 
         return mergedConfig;
     }

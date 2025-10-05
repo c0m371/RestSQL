@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFramework>net9.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
+    <OutputType>library</OutputType>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 

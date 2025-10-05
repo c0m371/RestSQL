@@ -19,15 +19,13 @@ public class ResultAggregatorTests
             ]
         };
 
-        var field = new OutputField(
-            Type: OutputFieldType.Long,
-            IsArray: false,
-            Name: null,
-            ColumnName: "value",
-            QueryName: "main",
-            LinkColumn: null,
-            Fields: null
-        );
+        var field = new OutputField
+        {
+            Type = OutputFieldType.Long,
+            IsArray = false,
+            ColumnName = "value",
+            QueryName = "main"
+        };
 
         var result = _aggregator.Aggregate(queryResults, field);
         AssertJsonEqual("42", result);
@@ -44,19 +42,17 @@ public class ResultAggregatorTests
             ]
         };
 
-        var field = new OutputField(
-            Type: OutputFieldType.Object,
-            IsArray: false,
-            Name: null,
-            ColumnName: null,
-            QueryName: "users",
-            LinkColumn: null,
-            Fields:
+        var field = new OutputField
+        {
+            Type = OutputFieldType.Object,
+            IsArray = false,
+            QueryName = "users",
+            Fields =
             [
-                new(OutputFieldType.Long, false, "id", "id", null, null, null),
-                new(OutputFieldType.String, false, "name", "name", null, null, null)
+                new OutputField { Type = OutputFieldType.Long, Name = "id", ColumnName = "id" },
+                new OutputField { Type = OutputFieldType.String, Name = "name", ColumnName = "name" }
             ]
-        );
+        };
 
         var result = _aggregator.Aggregate(queryResults, field);
         AssertJsonEqual(@"{""id"":1,""name"":""Tom""}", result);
@@ -74,18 +70,16 @@ public class ResultAggregatorTests
             ]
         };
 
-        var field = new OutputField(
-            Type: OutputFieldType.Object,
-            IsArray: true,
-            Name: null,
-            ColumnName: null,
-            QueryName: "users",
-            LinkColumn: null,
-            Fields:
+        var field = new OutputField
+        {
+            Type = OutputFieldType.Object,
+            IsArray = true,
+            QueryName = "users",
+            Fields =
             [
-                new(OutputFieldType.Long, false, "id", "id", null, null, null)
+                new OutputField { Type = OutputFieldType.Long, Name = "id", ColumnName = "id" }
             ]
-        );
+        };
 
         var result = _aggregator.Aggregate(queryResults, field);
         AssertJsonEqual(@"[{""id"":1},{""id"":2}]", result);
@@ -104,15 +98,13 @@ public class ResultAggregatorTests
             ]
         };
 
-        var field = new OutputField(
-            Type: OutputFieldType.String,
-            IsArray: true,
-            Name: null,
-            ColumnName: "tag",
-            QueryName: "tags",
-            LinkColumn: null,
-            Fields: null
-        );
+        var field = new OutputField
+        {
+            Type = OutputFieldType.String,
+            IsArray = true,
+            ColumnName = "tag",
+            QueryName = "tags"
+        };
 
         var result = _aggregator.Aggregate(queryResults, field);
         AssertJsonEqual(@"[""csharp"",""json"",""sql""]", result);
@@ -129,15 +121,13 @@ public class ResultAggregatorTests
             ]
         };
 
-        var field = new OutputField(
-            Type: OutputFieldType.String,
-            IsArray: false,
-            Name: null,
-            ColumnName: "value",
-            QueryName: "main",
-            LinkColumn: null,
-            Fields: null
-        );
+        var field = new OutputField
+        {
+            Type = OutputFieldType.String,
+            IsArray = false,
+            ColumnName = "value",
+            QueryName = "main"
+        };
 
         var result = _aggregator.Aggregate(queryResults, field);
         AssertJsonEqual("null", result);
@@ -154,15 +144,13 @@ public class ResultAggregatorTests
             ]
         };
 
-        var field = new OutputField(
-            Type: OutputFieldType.Long,
-            IsArray: false,
-            Name: null,
-            ColumnName: "missing",
-            QueryName: "main",
-            LinkColumn: null,
-            Fields: null
-        );
+        var field = new OutputField
+        {
+            Type = OutputFieldType.Long,
+            IsArray = false,
+            ColumnName = "missing",
+            QueryName = "main"
+        };
 
         Assert.Throws<ArgumentException>(() => _aggregator.Aggregate(queryResults, field));
     }
@@ -185,34 +173,32 @@ public class ResultAggregatorTests
             ]
         };
 
-        var postsField = new OutputField(
-            Type: OutputFieldType.Object,
-            IsArray: true,
-            Name: "posts",
-            ColumnName: null,
-            QueryName: "posts",
-            LinkColumn: "user_id",
-            Fields:
+        var postsField = new OutputField
+        {
+            Type = OutputFieldType.Object,
+            IsArray = true,
+            Name = "posts",
+            QueryName = "posts",
+            LinkColumn = "user_id",
+            Fields =
             [
-                new(OutputFieldType.Long, false, "id", "id", null, null, null),
-                new(OutputFieldType.String, false, "title", "title", null, null, null)
+                new OutputField { Type = OutputFieldType.Long, Name = "id", ColumnName = "id" },
+                new OutputField { Type = OutputFieldType.String, Name = "title", ColumnName = "title" }
             ]
-        );
+        };
 
-        var userField = new OutputField(
-            Type: OutputFieldType.Object,
-            IsArray: true,
-            Name: null,
-            ColumnName: null,
-            QueryName: "users",
-            LinkColumn: null,
-            Fields:
+        var userField = new OutputField
+        {
+            Type = OutputFieldType.Object,
+            IsArray = true,
+            QueryName = "users",
+            Fields =
             [
-                new(OutputFieldType.Long, false, "id", "user_id", null, null, null),
-                new(OutputFieldType.String, false, "name", "name", null, null, null),
+                new OutputField { Type = OutputFieldType.Long, Name = "id", ColumnName = "user_id" },
+                new OutputField { Type = OutputFieldType.String, Name = "name", ColumnName = "name" },
                 postsField
             ]
-        );
+        };
 
         var result = _aggregator.Aggregate(queryResults, userField);
 
@@ -236,35 +222,32 @@ public class ResultAggregatorTests
             ]
         };
 
-        var tagsField = new OutputField(
-            Type: OutputFieldType.String,
-            IsArray: true,
-            Name: "tags",
-            ColumnName: "tag",
-            QueryName: "tags",
-            LinkColumn: "user_id",
-            Fields: null
-        );
+        var tagsField = new OutputField
+        {
+            Type = OutputFieldType.String,
+            IsArray = true,
+            Name = "tags",
+            ColumnName = "tag",
+            QueryName = "tags",
+            LinkColumn = "user_id"
+        };
 
-        var userField = new OutputField(
-            Type: OutputFieldType.Object,
-            IsArray: true,
-            Name: null,
-            ColumnName: null,
-            QueryName: "users",
-            LinkColumn: null,
-            Fields:
+        var userField = new OutputField
+        {
+            Type = OutputFieldType.Object,
+            IsArray = true,
+            QueryName = "users",
+            Fields =
             [
-                new(OutputFieldType.Long, false, "id", "user_id", null, null, null),
-                new(OutputFieldType.String, false, "name", "name", null, null, null),
+                new OutputField { Type = OutputFieldType.Long, Name = "id", ColumnName = "user_id" },
+                new OutputField { Type = OutputFieldType.String, Name = "name", ColumnName = "name" },
                 tagsField
             ]
-        );
+        };
 
         var result = _aggregator.Aggregate(queryResults, userField);
 
         var expected = @"[{""id"":1,""name"":""Tom"",""tags"":[""csharp"",""sql""]}]";
-
         AssertJsonEqual(expected, result);
     }
 
@@ -275,23 +258,20 @@ public class ResultAggregatorTests
         {
             ["tags"] =
             [
-                    new Dictionary<string, object?> { ["tag"] = "x" },
-                    new Dictionary<string, object?> { ["tag"] = "y" }
-                ]
+                new Dictionary<string, object?> { ["tag"] = "x" },
+                new Dictionary<string, object?> { ["tag"] = "y" }
+            ]
         };
 
-        var field = new OutputField(
-            Type: OutputFieldType.String,
-            IsArray: true,
-            Name: null,
-            ColumnName: "tag",
-            QueryName: "tags",
-            LinkColumn: null,
-            Fields: null
-        );
+        var field = new OutputField
+        {
+            Type = OutputFieldType.String,
+            IsArray = true,
+            ColumnName = "tag",
+            QueryName = "tags"
+        };
 
         var result = _aggregator.Aggregate(queryResults, field);
-
         AssertJsonEqual(@"[""x"",""y""]", result);
     }
 
