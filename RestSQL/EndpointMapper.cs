@@ -1,4 +1,3 @@
-using System;
 using RestSQL.Application.Interfaces;
 
 namespace RestSQL;

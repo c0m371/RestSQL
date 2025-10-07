@@ -1,4 +1,3 @@
-using System;
 using RestSQL.Application.Interfaces;
 using RestSQL.Domain;
 using RestSQL.Infrastructure.Interfaces;

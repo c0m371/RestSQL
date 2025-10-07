@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Application.Tests",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL", "RestSQL\RestSQL.csproj", "{0BFE6170-6266-4C7B-BEE0-E2B43764F73E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Infrastructure.Tests", "RestSQL.Infrastructure.Tests\RestSQL.Infrastructure.Tests.csproj", "{C0189A6C-DC80-4450-8C03-AF577B68C10C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -111,6 +113,18 @@ Global
 		{0BFE6170-6266-4C7B-BEE0-E2B43764F73E}.Release|x64.Build.0 = Release|Any CPU
 		{0BFE6170-6266-4C7B-BEE0-E2B43764F73E}.Release|x86.ActiveCfg = Release|Any CPU
 		{0BFE6170-6266-4C7B-BEE0-E2B43764F73E}.Release|x86.Build.0 = Release|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Debug|x64.Build.0 = Debug|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Debug|x86.Build.0 = Debug|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Release|x64.ActiveCfg = Release|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Release|x64.Build.0 = Release|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Release|x86.ActiveCfg = Release|Any CPU
+		{C0189A6C-DC80-4450-8C03-AF577B68C10C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

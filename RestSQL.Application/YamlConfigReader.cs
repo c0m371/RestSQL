@@ -27,8 +27,6 @@ public class YamlConfigReader : IYamlConfigReader
             return deserializer.Deserialize<Config>(reader);
         });
 
-        //TODO validation (no duplicates, ...)
-
         var mergedConfig = new Config
         {
             Connections = allConfigs.SelectMany(c => c.Connections).ToDictionary(),
