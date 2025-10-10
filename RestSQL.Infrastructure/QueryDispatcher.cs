@@ -1,3 +1,4 @@
+using System.Data;
 using RestSQL.Domain;
 using RestSQL.Infrastructure.Interfaces;
 
@@ -9,14 +10,7 @@ public class QueryDispatcher(IEnumerable<IQueryExecutor> queryExecutors) : IQuer
 
     public async Task<IEnumerable<IDictionary<string, object?>>> QueryAsync(string connectionName, string sql, IDictionary<string, object?> parameters)
     {
-        if (!connectionsWithExecutors.TryGetValue(connectionName, out var connectionWithExecutor))
-        {
-            if (connectionsWithExecutors.Count == 0)
-                throw new InvalidOperationException("Cannot query before InitializeExecutors were called");
-
-            throw new KeyNotFoundException($"Query executor for connection '{connectionName}' not found.");
-        }
-
+        var connectionWithExecutor = GetConnectionWithExecutor(connectionName);
         return await connectionWithExecutor.QueryExecutor.QueryAsync(connectionWithExecutor.Connection.ConnectionString, sql, parameters).ConfigureAwait(false);
     }
 
@@ -30,6 +24,19 @@ public class QueryDispatcher(IEnumerable<IQueryExecutor> queryExecutors) : IQuer
 
             connectionsWithExecutors.Add(kvp.Key, new ConnectionWithExecutor(kvp.Value, queryExecutor));
         }
+    }
+
+    private ConnectionWithExecutor GetConnectionWithExecutor(string connectionName)
+    {
+        if (!connectionsWithExecutors.TryGetValue(connectionName, out var connectionWithExecutor))
+        {
+            if (connectionsWithExecutors.Count == 0)
+                throw new InvalidOperationException("Cannot query before InitializeExecutors were called");
+
+            throw new KeyNotFoundException($"Query executor for connection '{connectionName}' not found.");
+        }
+
+        return connectionWithExecutor;
     }
 
     private record ConnectionWithExecutor(Connection Connection, IQueryExecutor QueryExecutor);

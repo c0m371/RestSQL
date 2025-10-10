@@ -17,7 +17,7 @@ public static class EndpointMapper
                 request.RouteValues.ToList().ForEach(kvp => parameters.Add(kvp.Key, kvp.Value));
                 request.Query.ToList().ForEach(kvp => parameters.Add(kvp.Key, kvp.Value));
 
-                var result = await endpointService.GetEndpointResultAsync(endpoint, parameters).ConfigureAwait(false);
+                var result = await endpointService.GetEndpointResultAsync(endpoint, parameters, request.Body).ConfigureAwait(false);
 
                 return Results.Json(result, statusCode: endpoint.StatusCode);
             });
