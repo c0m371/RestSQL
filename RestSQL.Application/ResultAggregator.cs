@@ -88,7 +88,6 @@ public class ResultAggregator : IResultAggregator
             return jsonObject;
         }
 
-        // Primitive at root or inside array
         return GetPrimitiveValue(result, field);
     }
 
@@ -116,7 +115,7 @@ public class ResultAggregator : IResultAggregator
         if (row.TryGetValue(columnName, out var value))
             return value;
 
-        // Cse-insensitive fallback
+        // Case-insensitive fallback
         var altKey = row.Keys.FirstOrDefault(k => string.Equals(k, columnName, StringComparison.OrdinalIgnoreCase));
         if (altKey != null)
             return row[altKey];

@@ -10,13 +10,13 @@ namespace RestSQL.Application;
 
 public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator resultAggregator) : IEndpointService
 {
-    public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream body)
+    public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
         await ExecuteWriteOperations(endpoint, parameterValues, body).ConfigureAwait(false);
         return await ExecuteQueries(endpoint, parameterValues).ConfigureAwait(false);
     }
 
-    private async Task ExecuteWriteOperations(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream body)
+    private async Task ExecuteWriteOperations(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
         if (!endpoint.WriteOperations.Any())
             return;
@@ -35,8 +35,11 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         return resultAggregator.Aggregate(queryResults, endpoint.OutputStructure);
     }
 
-    private async Task<object?> ReadAndParseJsonStreamAsync(Stream stream)
+    private async Task<object?> ReadAndParseJsonStreamAsync(Stream? stream)
     {
+        if (stream is null)
+            return null;
+            
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,

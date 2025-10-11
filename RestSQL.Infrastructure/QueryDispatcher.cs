@@ -14,6 +14,12 @@ public class QueryDispatcher(IEnumerable<IQueryExecutor> queryExecutors) : IQuer
         return await connectionWithExecutor.QueryExecutor.QueryAsync(connectionWithExecutor.Connection.ConnectionString, sql, parameters).ConfigureAwait(false);
     }
 
+    public async Task<ITransaction> BeginTransactionAsync(string connectionName)
+    {
+        var connectionWithExecutor = GetConnectionWithExecutor(connectionName);
+        return await connectionWithExecutor.QueryExecutor.BeginTransactionAsync(connectionWithExecutor.Connection.ConnectionString).ConfigureAwait(false);
+    }
+
     public void InitializeExecutors(IDictionary<string, Connection> connections)
     {
         foreach (var kvp in connections)
