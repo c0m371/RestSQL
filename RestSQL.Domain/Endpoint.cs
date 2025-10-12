@@ -7,5 +7,5 @@ public record Endpoint
     public required int StatusCode { get; init; }
     public IDictionary<string, SqlQuery> SqlQueries { get; init; } = new Dictionary<string, SqlQuery>();
     public required OutputField OutputStructure { get; init; }
-    public IDictionary<string, WriteOperation> WriteOperations { get; init; } = new Dictionary<string, WriteOperation>();
+    public IList<WriteOperation> WriteOperations { get; init; } = [];
 }

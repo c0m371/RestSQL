@@ -10,13 +10,15 @@ public class EndpointServiceTests
 {
     private readonly Mock<IQueryDispatcher> _queryDispatcherMock;
     private readonly Mock<IResultAggregator> _resultAggregatorMock;
+    private readonly Mock<IRequestBodyParser> _requestBodyParserMock;
     private readonly EndpointService _service;
 
     public EndpointServiceTests()
     {
         _queryDispatcherMock = new Mock<IQueryDispatcher>();
         _resultAggregatorMock = new Mock<IResultAggregator>();
-        _service = new EndpointService(_queryDispatcherMock.Object, _resultAggregatorMock.Object);
+        _requestBodyParserMock = new Mock<IRequestBodyParser>();
+        _service = new EndpointService(_queryDispatcherMock.Object, _resultAggregatorMock.Object, _requestBodyParserMock.Object);
     }
 
     [Fact]

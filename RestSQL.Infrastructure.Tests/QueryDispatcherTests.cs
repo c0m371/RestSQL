@@ -8,6 +8,13 @@ public class QueryDispatcherTests
     private class FakeQueryExecutor : IQueryExecutor
     {
         public DatabaseType Type { get; set; } = DatabaseType.PostgreSQL;
+
+        public Task<ITransaction> BeginTransactionAsync(string connectionString)
+        {
+            //TODO expand tests
+            throw new NotImplementedException();
+        }
+
         public Task<IEnumerable<IDictionary<string, object?>>> QueryAsync(string connectionString, string sql, IDictionary<string, object?> parameters)
         {
             return Task.FromResult<IEnumerable<IDictionary<string, object?>>>(new[]

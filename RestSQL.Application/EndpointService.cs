@@ -1,14 +1,16 @@
+using System.Linq.Expressions;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using Json.Path;
 using RestSQL.Application.Interfaces;
 using RestSQL.Domain;
 using RestSQL.Infrastructure.Interfaces;
 
 namespace RestSQL.Application;
 
-public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator resultAggregator) : IEndpointService
+public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator resultAggregator, IRequestBodyParser requestBodyParser) : IEndpointService
 {
     public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
@@ -21,8 +23,82 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         if (!endpoint.WriteOperations.Any())
             return;
 
-        var parsedBody = await ReadAndParseJsonStreamAsync(body).ConfigureAwait(false);
-        
+        var parsedBody = await requestBodyParser.ReadAndParseJsonStreamAsync(body).ConfigureAwait(false);
+
+        var transactions = new Dictionary<string, ITransaction>();
+        try
+        {
+            transactions = await BeginTransactions(endpoint).ConfigureAwait(false);
+
+            foreach (var writeOperation in endpoint.WriteOperations)
+            {
+                ProcessWriteOperation(parsedBody, transactions, writeOperation, parameterValues);
+            }
+        }
+        catch
+        {
+            await RollbackTransactions(transactions).ConfigureAwait(false);
+
+            throw;
+        }
+        finally
+        {
+            await DisposeTransactions(transactions).ConfigureAwait(false);
+        }
+    }
+
+    private static void ProcessWriteOperation(JsonNode? parsedBody, Dictionary<string, ITransaction> transactions, WriteOperation writeOperation, IDictionary<string, object?> parameterValues)
+    {
+        var transaction = transactions[writeOperation.ConnectionName];
+
+        if (writeOperation.UseRawBodyValue)
+        {
+            if (writeOperation.BodyParameterName is null)
+                throw new InvalidOperationException("Cannot use body as parameter value if no BodyParameterName is provided");
+
+            var parametersForWriteOperation = new Dictionary<string, object?>(parameterValues);
+            parametersForWriteOperation.Add(writeOperation.BodyParameterName, parsedBody?.GetValue<object?>());
+
+            if (writeOperation.OutputCaptures)
+        }
+        if (writeOperation.JsonPath is not null)
+            {
+                if (!JsonPath.TryParse(writeOperation.JsonPath, out var jsonPath))
+                    throw new JsonException($"Invalid json path: {writeOperation.JsonPath}");
+
+                var json = jsonPath.Evaluate(parsedBody);
+            }
+    }
+
+    private static async Task DisposeTransactions(Dictionary<string, ITransaction> transactions)
+    {
+        foreach (var tx in transactions.Values)
+        {
+            try { await tx.DisposeAsync().ConfigureAwait(false); }
+            catch { } //TODO LOG  }
+        }
+    }
+
+    private static async Task RollbackTransactions(Dictionary<string, ITransaction> transactions)
+    {
+        foreach (var tx in transactions.Values)
+        {
+            try { await tx.RollbackAsync().ConfigureAwait(false); }
+            catch { }//TODO LOG }
+        }
+    }
+
+    private async Task<Dictionary<string, ITransaction>> BeginTransactions(Endpoint endpoint)
+    {
+        var transactions = new Dictionary<string, ITransaction>();
+
+        foreach (var connectionName in endpoint.WriteOperations.Select(o => o.Value.ConnectionName).Distinct())
+        {
+            var transaction = await queryDispatcher.BeginTransactionAsync(connectionName).ConfigureAwait(false);
+            transactions.Add(connectionName, transaction);
+        }
+
+        return transactions;
     }
 
     private async Task<JsonNode?> ExecuteQueries(Endpoint endpoint, IDictionary<string, object?> parameterValues)
@@ -35,35 +111,4 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         return resultAggregator.Aggregate(queryResults, endpoint.OutputStructure);
     }
 
-    private async Task<object?> ReadAndParseJsonStreamAsync(Stream? stream)
-    {
-        if (stream is null)
-            return null;
-            
-        var options = new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true,
-            Converters = { new JsonStringEnumConverter() }
-        };
-
-        var jsonNode = await JsonSerializer.DeserializeAsync<JsonNode>(stream, options);
-
-        if (jsonNode == null)
-            return null;
-
-        if (jsonNode is JsonObject jsonObject)
-            return jsonObject.AsObject().ToDictionary(p => p.Key, p => (object?)p.Value);
-
-        else if (jsonNode is JsonArray jsonArray)
-        {
-            return jsonArray.Select(item => (object?)item switch
-            {
-                JsonObject obj => obj.ToDictionary(p => p.Key, p => (object?)p.Value),
-                JsonValue value => value.GetValue<object>(),
-                _ => null
-            }).ToList();
-        }
-
-        throw new JsonException("Request body must be a single JSON object or an array.");
-    }
 }
