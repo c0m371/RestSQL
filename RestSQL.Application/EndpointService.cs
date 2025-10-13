@@ -47,8 +47,10 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         }
     }
 
-    private static void ProcessWriteOperation(JsonNode? parsedBody, Dictionary<string, ITransaction> transactions, WriteOperation writeOperation, IDictionary<string, object?> parameterValues)
+    private static async Task<IDictionary<string, object?> ProcessWriteOperation(JsonNode? parsedBody, Dictionary<string, ITransaction> transactions, WriteOperation writeOperation, IDictionary<string, object?> parameterValues)
     {
+        IDictionary<string, object?> output = new Dictionary<string, object?>();
+
         var transaction = transactions[writeOperation.ConnectionName];
 
         if (writeOperation.UseRawBodyValue)
@@ -56,18 +58,28 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
             if (writeOperation.BodyParameterName is null)
                 throw new InvalidOperationException("Cannot use body as parameter value if no BodyParameterName is provided");
 
+
             var parametersForWriteOperation = new Dictionary<string, object?>(parameterValues);
             parametersForWriteOperation.Add(writeOperation.BodyParameterName, parsedBody?.GetValue<object?>());
 
-            if (writeOperation.OutputCaptures)
+            if (writeOperation.OutputCaptures.Any())
+                output = await transaction.ExecuteQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
+            else
+                await transaction.ExecuteNonQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
+
+            //TODO merge with json case
         }
         if (writeOperation.JsonPath is not null)
-            {
-                if (!JsonPath.TryParse(writeOperation.JsonPath, out var jsonPath))
-                    throw new JsonException($"Invalid json path: {writeOperation.JsonPath}");
+        {
+            if (!JsonPath.TryParse(writeOperation.JsonPath, out var jsonPath))
+                throw new JsonException($"Invalid json path: {writeOperation.JsonPath}");
 
-                var json = jsonPath.Evaluate(parsedBody);
-            }
+            var json = jsonPath.Evaluate(parsedBody);
+
+            //TODO continue
+        }
+
+        return output;
     }
 
     private static async Task DisposeTransactions(Dictionary<string, ITransaction> transactions)
