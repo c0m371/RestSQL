@@ -1,16 +1,12 @@
-using System.Linq.Expressions;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using Json.Path;
+using Microsoft.Extensions.Logging;
 using RestSQL.Application.Interfaces;
 using RestSQL.Domain;
 using RestSQL.Infrastructure.Interfaces;
+using System.Text.Json.Nodes;
 
 namespace RestSQL.Application;
 
-public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator resultAggregator, IRequestBodyParser requestBodyParser) : IEndpointService
+public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator resultAggregator, IRequestBodyParser requestBodyParser, ILogger logger) : IEndpointService
 {
     public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
@@ -32,8 +28,14 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
 
             foreach (var writeOperation in endpoint.WriteOperations)
             {
-                ProcessWriteOperation(parsedBody, transactions, writeOperation, parameterValues);
+                var capturedOutput = await ProcessWriteOperation(parsedBody, transactions, writeOperation, parameterValues).ConfigureAwait(false);
+
+                foreach (var output in capturedOutput)
+                    if (!parameterValues.TryAdd(output.Key, output.Value))
+                        throw new InvalidOperationException($"Cannot add captured output '{output.Key}' to parameters. A parameter with the same name already exists.");
             }
+
+            await CommitTransactions(transactions).ConfigureAwait(false);
         }
         catch
         {
@@ -47,56 +49,78 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         }
     }
 
-    private static async Task<IDictionary<string, object?> ProcessWriteOperation(JsonNode? parsedBody, Dictionary<string, ITransaction> transactions, WriteOperation writeOperation, IDictionary<string, object?> parameterValues)
+    private static async Task<IDictionary<string, object?>> ProcessWriteOperation(JsonNode? parsedBody, Dictionary<string, ITransaction> transactions, WriteOperation writeOperation, IDictionary<string, object?> parameterValues)
     {
-        IDictionary<string, object?> output = new Dictionary<string, object?>();
-
         var transaction = transactions[writeOperation.ConnectionName];
 
-        if (writeOperation.UseRawBodyValue)
+        var parametersForWriteOperation = new Dictionary<string, object?>(parameterValues);
+
+        MergeBodyParameters(parsedBody, writeOperation, parametersForWriteOperation);
+
+        if (writeOperation.OutputCaptures.Any())
+            return await transaction.ExecuteQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
+
+        await transaction.ExecuteNonQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
+        return new Dictionary<string, object?>();
+    }
+
+    private static void MergeBodyParameters(JsonNode? parsedBody, WriteOperation writeOperation, Dictionary<string, object?> parametersForWriteOperation)
+    {
+        if (writeOperation.BodyType == WriteOperationBodyType.Raw)
         {
-            if (writeOperation.BodyParameterName is null)
+            if (writeOperation.RawBodyParameterName is null)
                 throw new InvalidOperationException("Cannot use body as parameter value if no BodyParameterName is provided");
 
-
-            var parametersForWriteOperation = new Dictionary<string, object?>(parameterValues);
-            parametersForWriteOperation.Add(writeOperation.BodyParameterName, parsedBody?.GetValue<object?>());
-
-            if (writeOperation.OutputCaptures.Any())
-                output = await transaction.ExecuteQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
-            else
-                await transaction.ExecuteNonQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
-
-            //TODO merge with json case
+            if (!parametersForWriteOperation.TryAdd(writeOperation.RawBodyParameterName, parsedBody?.GetValue<object?>()))
+                throw new InvalidOperationException($"Cannot add body parameter '{writeOperation.RawBodyParameterName}' to parameters for write operation. A parameter with the same name already exists.");
         }
-        if (writeOperation.JsonPath is not null)
+        else if (writeOperation.BodyType == WriteOperationBodyType.Object)
         {
-            if (!JsonPath.TryParse(writeOperation.JsonPath, out var jsonPath))
-                throw new JsonException($"Invalid json path: {writeOperation.JsonPath}");
+            if (parsedBody is not JsonObject bodyAsJsonObject)
+                throw new InvalidOperationException("Cannot use body as parameter value if body is not a JSON object");
 
-            var json = jsonPath.Evaluate(parsedBody);
-
-            //TODO continue
-        }
-
-        return output;
-    }
-
-    private static async Task DisposeTransactions(Dictionary<string, ITransaction> transactions)
-    {
-        foreach (var tx in transactions.Values)
-        {
-            try { await tx.DisposeAsync().ConfigureAwait(false); }
-            catch { } //TODO LOG  }
+            foreach (var kvp in bodyAsJsonObject)
+                if (!parametersForWriteOperation.TryAdd(kvp.Key, kvp.Value?.GetValue<object?>()))
+                    throw new InvalidOperationException($"Cannot add body parameter '{kvp.Key}' to parameters for write operation. A parameter with the same name already exists.");
         }
     }
 
-    private static async Task RollbackTransactions(Dictionary<string, ITransaction> transactions)
+    private async Task CommitTransactions(Dictionary<string, ITransaction> transactions)
     {
-        foreach (var tx in transactions.Values)
+        foreach (var kvp in transactions)
         {
-            try { await tx.RollbackAsync().ConfigureAwait(false); }
-            catch { }//TODO LOG }
+            await kvp.Value.CommitAsync().ConfigureAwait(false);
+            logger.LogInformation("Commited transaction {name}", kvp.Key);
+        }
+    }
+
+    private async Task DisposeTransactions(Dictionary<string, ITransaction> transactions)
+    {
+        foreach (var kvp in transactions)
+        {
+            try
+            {
+                await kvp.Value.DisposeAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Error while disposing transaction {name}", kvp.Key);
+            }
+        }
+    }
+
+    private async Task RollbackTransactions(Dictionary<string, ITransaction> transactions)
+    {
+        foreach (var kvp in transactions)
+        {
+            try
+            {
+                await kvp.Value.RollbackAsync().ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                logger.LogWarning(ex, "Error while rolling back transaction {name}", kvp.Key);
+            }
         }
     }
 
@@ -104,7 +128,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
     {
         var transactions = new Dictionary<string, ITransaction>();
 
-        foreach (var connectionName in endpoint.WriteOperations.Select(o => o.Value.ConnectionName).Distinct())
+        foreach (var connectionName in endpoint.WriteOperations.Select(o => o.ConnectionName).Distinct())
         {
             var transaction = await queryDispatcher.BeginTransactionAsync(connectionName).ConfigureAwait(false);
             transactions.Add(connectionName, transaction);
