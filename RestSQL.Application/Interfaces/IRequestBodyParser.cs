@@ -5,5 +5,5 @@ namespace RestSQL.Application.Interfaces;
 
 public interface IRequestBodyParser
 {
-    Task<JsonNode?> ReadAndParseJsonStreamAsync(Stream? stream);
+    (JsonNode? jsonValue, string? stringValue) ReadAndParseJsonStream(Stream? stream);
 }

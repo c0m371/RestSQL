@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging;
 using RestSQL.Application.Interfaces;
 using RestSQL.Domain;
 using RestSQL.Infrastructure.Interfaces;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 namespace RestSQL.Application;
@@ -19,7 +20,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         if (!endpoint.WriteOperations.Any())
             return;
 
-        var parsedBody = await requestBodyParser.ReadAndParseJsonStreamAsync(body).ConfigureAwait(false);
+        (var parsedBody, var stringBody) = requestBodyParser.ReadAndParseJsonStream(body);
 
         var transactions = new Dictionary<string, ITransaction>();
         try
@@ -28,7 +29,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
 
             foreach (var writeOperation in endpoint.WriteOperations)
             {
-                var capturedOutput = await ProcessWriteOperation(parsedBody, transactions, writeOperation, parameterValues).ConfigureAwait(false);
+                var capturedOutput = await ProcessWriteOperation(parsedBody, stringBody, transactions, writeOperation, parameterValues).ConfigureAwait(false);
 
                 foreach (var output in capturedOutput)
                     if (!parameterValues.TryAdd(output.Key, output.Value))
@@ -49,13 +50,13 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         }
     }
 
-    private static async Task<IDictionary<string, object?>> ProcessWriteOperation(JsonNode? parsedBody, Dictionary<string, ITransaction> transactions, WriteOperation writeOperation, IDictionary<string, object?> parameterValues)
+    private static async Task<IDictionary<string, object?>> ProcessWriteOperation(JsonNode? parsedBody, string? stringBody, Dictionary<string, ITransaction> transactions, WriteOperation writeOperation, IDictionary<string, object?> parameterValues)
     {
         var transaction = transactions[writeOperation.ConnectionName];
 
         var parametersForWriteOperation = new Dictionary<string, object?>(parameterValues);
 
-        MergeBodyParameters(parsedBody, writeOperation, parametersForWriteOperation);
+        MergeBodyParameters(parsedBody, stringBody, writeOperation, parametersForWriteOperation);
 
         if (writeOperation.OutputCaptures.Any())
             return await transaction.ExecuteQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
@@ -64,14 +65,14 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         return new Dictionary<string, object?>();
     }
 
-    private static void MergeBodyParameters(JsonNode? parsedBody, WriteOperation writeOperation, Dictionary<string, object?> parametersForWriteOperation)
+    private static void MergeBodyParameters(JsonNode? parsedBody, string? stringBody, WriteOperation writeOperation, Dictionary<string, object?> parametersForWriteOperation)
     {
         if (writeOperation.BodyType == WriteOperationBodyType.Raw)
         {
             if (writeOperation.RawBodyParameterName is null)
                 throw new InvalidOperationException("Cannot use body as parameter value if no BodyParameterName is provided");
 
-            if (!parametersForWriteOperation.TryAdd(writeOperation.RawBodyParameterName, parsedBody?.GetValue<object?>()))
+            if (!parametersForWriteOperation.TryAdd(writeOperation.RawBodyParameterName, stringBody))
                 throw new InvalidOperationException($"Cannot add body parameter '{writeOperation.RawBodyParameterName}' to parameters for write operation. A parameter with the same name already exists.");
         }
         else if (writeOperation.BodyType == WriteOperationBodyType.Object)
@@ -80,9 +81,31 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
                 throw new InvalidOperationException("Cannot use body as parameter value if body is not a JSON object");
 
             foreach (var kvp in bodyAsJsonObject)
-                if (!parametersForWriteOperation.TryAdd(kvp.Key, kvp.Value?.GetValue<object?>()))
+            {
+                object? clrValue = null;
+
+                if (kvp.Value is JsonValue jsonValue)
+                    clrValue = GetClrValue(jsonValue);
+
+                if (!parametersForWriteOperation.TryAdd(kvp.Key, clrValue))
                     throw new InvalidOperationException($"Cannot add body parameter '{kvp.Key}' to parameters for write operation. A parameter with the same name already exists.");
+            }
         }
+    }
+
+    private static object? GetClrValue(JsonValue jsonValue)
+    {
+        object? clrValue;
+        clrValue = jsonValue.GetValueKind() switch
+        {
+            JsonValueKind.String => jsonValue.GetValue<string>(),
+            JsonValueKind.Number => jsonValue.GetValue<long>(), // Use long as a safe default for numbers
+            JsonValueKind.True => true,
+            JsonValueKind.False => false,
+            JsonValueKind.Null => null,
+            _ => null
+        };
+        return clrValue;
     }
 
     private async Task CommitTransactions(Dictionary<string, ITransaction> transactions)

@@ -14,11 +14,25 @@ public class RequestBodyParser : IRequestBodyParser
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public async Task<JsonNode?> ReadAndParseJsonStreamAsync(Stream? stream)
+    public (JsonNode? jsonValue, string? stringValue) ReadAndParseJsonStream(Stream? stream)
     {
         if (stream is null)
-            return null;
+            return (null, null);
 
-        return await JsonSerializer.DeserializeAsync<JsonNode>(stream, options);
+        var reader = new StreamReader(stream);
+        var stringValue = reader.ReadToEnd();
+
+        JsonNode? jsonValue = null;
+
+        try
+        {
+            jsonValue = JsonSerializer.Deserialize<JsonNode>(stringValue, options);
+        }
+        catch (JsonException)
+        {
+            // Ignore parsing errors, return null for jsonValue
+        }
+
+        return (jsonValue, stringValue);
     }
 }
