@@ -59,7 +59,20 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         MergeBodyParameters(parsedBody, stringBody, writeOperation, parametersForWriteOperation);
 
         if (writeOperation.OutputCaptures.Any())
-            return await transaction.ExecuteQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
+        {
+            var result = await transaction.ExecuteQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
+            var capturedOutput = new Dictionary<string, object?>();
+
+            foreach (var capture in writeOperation.OutputCaptures)
+            {
+                if (!result.TryGetValue(capture.ColumnName, out var value))
+                    throw new InvalidOperationException($"Column name {capture.ColumnName} not found in result");
+
+                capturedOutput.Add(capture.ParameterName, value);
+            }
+
+            return capturedOutput;
+        }
 
         await transaction.ExecuteNonQueryAsync(writeOperation.Sql, parametersForWriteOperation).ConfigureAwait(false);
         return new Dictionary<string, object?>();
@@ -99,7 +112,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         clrValue = jsonValue.GetValueKind() switch
         {
             JsonValueKind.String => jsonValue.GetValue<string>(),
-            JsonValueKind.Number => jsonValue.GetValue<long>(), // Use long as a safe default for numbers
+            JsonValueKind.Number => jsonValue.GetValue<long>(),
             JsonValueKind.True => true,
             JsonValueKind.False => false,
             JsonValueKind.Null => null,

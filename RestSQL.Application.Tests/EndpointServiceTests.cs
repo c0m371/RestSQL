@@ -7,6 +7,7 @@ using System.Diagnostics.Metrics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using YamlDotNet.Core.Tokens;
 
 namespace RestSQL.Application.Tests;
 
@@ -414,5 +415,73 @@ public class EndpointServiceTests
         Assert.Equal(100L, finalParameters["existing"]);
         Assert.Equal("bodyValue1", finalParameters["bodyKey1"]);
         Assert.Equal(200L, finalParameters["bodyKey2"]);
+    }
+
+    [Fact]
+    public async Task GetEndpointResult_ShouldCaptureAndPassOutput()
+    {
+        // Arrange
+        var endpoint = new Endpoint
+        {
+            // Note: SqlQueries is empty so we can focus solely on WriteOperations
+            Path = "insert",
+            Verb = "POST",
+            StatusCode = 201,
+            SqlQueries = new Dictionary<string, SqlQuery>(),
+            WriteOperations = new List<WriteOperation>
+            {
+                new() {
+                    ConnectionName = "conn1",
+                    Sql = "INSERT 1",
+                    BodyType = WriteOperationBodyType.None,
+                    OutputCaptures =
+                    [
+                        new OutputCapture() { ColumnName = "Column1", ParameterName = "Param1" },
+                        new OutputCapture() { ColumnName = "Column2", ParameterName = "Param2" }
+                    ]
+                },
+                new() { ConnectionName = "conn1", Sql = "INSERT 2", BodyType = WriteOperationBodyType.None }
+            },
+            OutputStructure = new OutputField { Type = OutputFieldType.Object, IsArray = false }
+        };
+        var parameters = new Dictionary<string, object?> { ["existingParameter"] = "existingValue" };
+
+        var transactionMock = new Mock<ITransaction>();
+
+        _queryDispatcherMock
+            .Setup(q => q.BeginTransactionAsync("conn1"))
+            .ReturnsAsync(transactionMock.Object);
+
+        transactionMock
+            .Setup(t => t.ExecuteQueryAsync("INSERT 1", It.Is<IDictionary<string, object?>>(d => d["existingParameter"].Equals("existingValue"))))
+            .Returns(Task.FromResult((IDictionary<string, object?>)new Dictionary<string, object?>()
+            {
+                ["Column1"] = "Value1",
+                ["Column2"] = "Value2",
+            }))
+            .Verifiable();
+
+        IDictionary<string, object?> inputParametersForOperation2 = null!;
+        transactionMock
+            .Setup(t => t.ExecuteNonQueryAsync("INSERT 2", It.IsAny<IDictionary<string, object?>>()))
+            .Callback<string, IDictionary<string, object?>>((s, p) => inputParametersForOperation2 = p)
+            .Returns(Task.FromResult(1))
+            .Verifiable();
+
+        // Act
+        var result = await _service.GetEndpointResultAsync(endpoint, parameters, null);
+
+        // Assert
+
+        // Verify output of operation 1 was merged (3: existing + Param1 + Param2)
+        Assert.Equal(3, inputParametersForOperation2.Count);
+        Assert.True(inputParametersForOperation2.ContainsKey("existingParameter"));
+        Assert.True(inputParametersForOperation2.ContainsKey("Param1"));
+        Assert.True(inputParametersForOperation2.ContainsKey("Param2"));
+
+        // Check merged values
+        Assert.Equal("existingValue", inputParametersForOperation2["existingParameter"]);
+        Assert.Equal("Value1", inputParametersForOperation2["Param1"]);
+        Assert.Equal("Value2", inputParametersForOperation2["Param2"]);
     }
 }
