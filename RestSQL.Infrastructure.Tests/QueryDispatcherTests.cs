@@ -11,9 +11,8 @@ public class QueryDispatcherTests
         // These methods are not directly tested by the dispatcher, so we throw/ignore
         public Task<IDictionary<string, object?>> ExecuteQueryAsync(string sql, IDictionary<string, object?> parameters) => throw new NotImplementedException();
         public Task<int> ExecuteNonQueryAsync(string sql, IDictionary<string, object?> parameters) => throw new NotImplementedException();
-        public Task CommitAsync() => Task.CompletedTask;
-        public Task RollbackAsync() => Task.CompletedTask;
-        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+        public void Commit() {}
+        public void Rollback() {}
         public void Dispose() { }
     }
 
@@ -22,11 +21,11 @@ public class QueryDispatcherTests
         public DatabaseType Type { get; set; } = DatabaseType.PostgreSQL;
         public string LastConnectionStringUsed { get; private set; } = string.Empty;
 
-        public Task<ITransaction> BeginTransactionAsync(string connectionString)
+        public ITransaction BeginTransaction(string connectionString)
         {
             // Capture the connection string used for assertion
             LastConnectionStringUsed = connectionString;
-            return Task.FromResult<ITransaction>(new FakeTransaction());
+            return new FakeTransaction();
         }
 
         public Task<IEnumerable<IDictionary<string, object?>>> QueryAsync(string connectionString, string sql, IDictionary<string, object?> parameters)
@@ -36,8 +35,8 @@ public class QueryDispatcherTests
 
             return Task.FromResult<IEnumerable<IDictionary<string, object?>>>(new[]
             {
-            new Dictionary<string, object?> { { "result", 42 } }
-        });
+                new Dictionary<string, object?> { { "result", 42 } }
+            });
         }
     }
 
@@ -110,7 +109,7 @@ public class QueryDispatcherTests
         dispatcher.InitializeExecutors(connections);
 
         // Act
-        var resultTransaction = await dispatcher.BeginTransactionAsync(connectionName);
+        var resultTransaction = dispatcher.BeginTransaction(connectionName);
 
         // Assert
         // 1. Check the return type
@@ -128,8 +127,8 @@ public class QueryDispatcherTests
         var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() });
 
         // Act + Assert
-        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            dispatcher.BeginTransactionAsync("conn"));
+        var ex = Assert.Throws<InvalidOperationException>(() =>
+            dispatcher.BeginTransaction("conn"));
 
         Assert.Contains("InitializeExecutors", ex.Message);
     }
@@ -146,8 +145,8 @@ public class QueryDispatcherTests
         dispatcher.InitializeExecutors(connections);
 
         // Act + Assert
-        var ex = await Assert.ThrowsAsync<KeyNotFoundException>(() =>
-            dispatcher.BeginTransactionAsync("conn2"));
+        var ex = Assert.Throws<KeyNotFoundException>(() =>
+            dispatcher.BeginTransaction("conn2"));
 
         Assert.Contains("not found", ex.Message);
     }

@@ -231,12 +231,12 @@ public class EndpointServiceTests
 
         // 1. Setup BeginTransactions
         _queryDispatcherMock
-            .Setup(q => q.BeginTransactionAsync("conn1"))
-            .ReturnsAsync(transactionMock.Object);
+            .Setup(q => q.BeginTransaction("conn1"))
+            .Returns(transactionMock.Object);
 
         // 2. Setup ExecuteNonQueryAsync (the write operation itself)
         transactionMock
-            .Setup(t => t.ExecuteNonQueryAsync("INSERT 1", It.Is<IDictionary<string, object?>>(d => d["p1"].Equals("val1"))))
+            .Setup(t => t.ExecuteNonQueryAsync("INSERT 1", It.Is<IDictionary<string, object?>>(d => d["p1"]!.Equals("val1"))))
             .Returns(Task.FromResult(1))
             .Verifiable();
 
@@ -247,11 +247,11 @@ public class EndpointServiceTests
 
         // Verify transaction flow: COMMIT and DISPOSE must be called
         transactionMock.Verify(t => t.ExecuteNonQueryAsync(It.IsAny<string>(), It.IsAny<IDictionary<string, object?>>()), Times.Once);
-        transactionMock.Verify(t => t.CommitAsync(), Times.Once, "Commit must be called on success.");
-        transactionMock.Verify(t => t.DisposeAsync(), Times.Once, "Dispose must be called in finally.");
-        transactionMock.Verify(t => t.RollbackAsync(), Times.Never, "Rollback must NOT be called on success.");
+        transactionMock.Verify(t => t.Commit(), Times.Once, "Commit must be called on success.");
+        transactionMock.Verify(t => t.Dispose(), Times.Once, "Dispose must be called in finally.");
+        transactionMock.Verify(t => t.Rollback(), Times.Never, "Rollback must NOT be called on success.");
 
-        _queryDispatcherMock.Verify(q => q.BeginTransactionAsync("conn1"), Times.Once);
+        _queryDispatcherMock.Verify(q => q.BeginTransaction("conn1"), Times.Once);
     }
 
     [Fact]
@@ -274,7 +274,7 @@ public class EndpointServiceTests
         var expectedException = new InvalidOperationException("Write operation failed.");
 
         var transactionMock = new Mock<ITransaction>();
-        _queryDispatcherMock.Setup(q => q.BeginTransactionAsync("conn1")).ReturnsAsync(transactionMock.Object);
+        _queryDispatcherMock.Setup(q => q.BeginTransaction("conn1")).Returns(transactionMock.Object);
 
         // 1. Setup ExecuteNonQueryAsync to throw an exception
         transactionMock
@@ -282,8 +282,8 @@ public class EndpointServiceTests
             .ThrowsAsync(expectedException);
 
         // 2. Setup Rollback and Dispose to complete normally
-        transactionMock.Setup(t => t.RollbackAsync()).Returns(Task.CompletedTask);
-        transactionMock.Setup(t => t.DisposeAsync()).Returns(new ValueTask(Task.CompletedTask));
+        transactionMock.Setup(t => t.Rollback());
+        transactionMock.Setup(t => t.Dispose());
 
         // Act + Assert
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(
@@ -293,9 +293,9 @@ public class EndpointServiceTests
 
         // Verify transaction flow: ROLLBACK and DISPOSE must be called
         transactionMock.Verify(t => t.ExecuteNonQueryAsync(It.IsAny<string>(), It.IsAny<IDictionary<string, object?>>()), Times.Once);
-        transactionMock.Verify(t => t.CommitAsync(), Times.Never, "Commit must NOT be called on failure.");
-        transactionMock.Verify(t => t.RollbackAsync(), Times.Once, "Rollback must be called on failure.");
-        transactionMock.Verify(t => t.DisposeAsync(), Times.Once, "Dispose must be called in finally.");
+        transactionMock.Verify(t => t.Commit(), Times.Never, "Commit must NOT be called on failure.");
+        transactionMock.Verify(t => t.Rollback(), Times.Once, "Rollback must be called on failure.");
+        transactionMock.Verify(t => t.Dispose(), Times.Once, "Dispose must be called in finally.");
 
         // Verify no queries were run if write fails
         _queryDispatcherMock.Verify(q => q.QueryAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<IDictionary<string, object?>>()), Times.Never);
@@ -337,7 +337,7 @@ public class EndpointServiceTests
             .Verifiable();
 
         var transactionMock = new Mock<ITransaction>();
-        _queryDispatcherMock.Setup(q => q.BeginTransactionAsync(It.IsAny<string>())).ReturnsAsync(transactionMock.Object);
+        _queryDispatcherMock.Setup(q => q.BeginTransaction(It.IsAny<string>())).Returns(transactionMock.Object);
 
         // Setup ExecuteNonQueryAsync to capture the final parameters
         IDictionary<string, object?> finalParameters = null!;
@@ -390,7 +390,7 @@ public class EndpointServiceTests
             .Verifiable();
 
         var transactionMock = new Mock<ITransaction>();
-        _queryDispatcherMock.Setup(q => q.BeginTransactionAsync(It.IsAny<string>())).ReturnsAsync(transactionMock.Object);
+        _queryDispatcherMock.Setup(q => q.BeginTransaction(It.IsAny<string>())).Returns(transactionMock.Object);
 
         // Setup ExecuteNonQueryAsync to capture the final parameters
         IDictionary<string, object?> finalParameters = null!;
@@ -449,11 +449,11 @@ public class EndpointServiceTests
         var transactionMock = new Mock<ITransaction>();
 
         _queryDispatcherMock
-            .Setup(q => q.BeginTransactionAsync("conn1"))
-            .ReturnsAsync(transactionMock.Object);
+            .Setup(q => q.BeginTransaction("conn1"))
+            .Returns(transactionMock.Object);
 
         transactionMock
-            .Setup(t => t.ExecuteQueryAsync("INSERT 1", It.Is<IDictionary<string, object?>>(d => d["existingParameter"].Equals("existingValue"))))
+            .Setup(t => t.ExecuteQueryAsync("INSERT 1", It.Is<IDictionary<string, object?>>(d => d["existingParameter"]!.Equals("existingValue"))))
             .Returns(Task.FromResult((IDictionary<string, object?>)new Dictionary<string, object?>()
             {
                 ["Column1"] = "Value1",

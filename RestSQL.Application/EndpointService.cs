@@ -25,7 +25,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         var transactions = new Dictionary<string, ITransaction>();
         try
         {
-            transactions = await BeginTransactions(endpoint).ConfigureAwait(false);
+            transactions = BeginTransactions(endpoint);
 
             foreach (var writeOperation in endpoint.WriteOperations)
             {
@@ -36,17 +36,16 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
                         throw new InvalidOperationException($"Cannot add captured output '{output.Key}' to parameters. A parameter with the same name already exists.");
             }
 
-            await CommitTransactions(transactions).ConfigureAwait(false);
+            CommitTransactions(transactions);
         }
         catch
         {
-            await RollbackTransactions(transactions).ConfigureAwait(false);
-
+            RollbackTransactions(transactions);
             throw;
         }
         finally
         {
-            await DisposeTransactions(transactions).ConfigureAwait(false);
+            DisposeTransactions(transactions);
         }
     }
 
@@ -121,22 +120,22 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         return clrValue;
     }
 
-    private async Task CommitTransactions(Dictionary<string, ITransaction> transactions)
+    private void CommitTransactions(Dictionary<string, ITransaction> transactions)
     {
         foreach (var kvp in transactions)
         {
-            await kvp.Value.CommitAsync().ConfigureAwait(false);
+            kvp.Value.Commit();
             logger.LogInformation("Commited transaction {name}", kvp.Key);
         }
     }
 
-    private async Task DisposeTransactions(Dictionary<string, ITransaction> transactions)
+    private void DisposeTransactions(Dictionary<string, ITransaction> transactions)
     {
         foreach (var kvp in transactions)
         {
             try
             {
-                await kvp.Value.DisposeAsync().ConfigureAwait(false);
+                kvp.Value.Dispose();
             }
             catch (Exception ex)
             {
@@ -145,13 +144,13 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         }
     }
 
-    private async Task RollbackTransactions(Dictionary<string, ITransaction> transactions)
+    private void RollbackTransactions(Dictionary<string, ITransaction> transactions)
     {
         foreach (var kvp in transactions)
         {
             try
             {
-                await kvp.Value.RollbackAsync().ConfigureAwait(false);
+                kvp.Value.Rollback();
             }
             catch (Exception ex)
             {
@@ -160,13 +159,13 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         }
     }
 
-    private async Task<Dictionary<string, ITransaction>> BeginTransactions(Endpoint endpoint)
+    private Dictionary<string, ITransaction> BeginTransactions(Endpoint endpoint)
     {
         var transactions = new Dictionary<string, ITransaction>();
 
         foreach (var connectionName in endpoint.WriteOperations.Select(o => o.ConnectionName).Distinct())
         {
-            var transaction = await queryDispatcher.BeginTransactionAsync(connectionName).ConfigureAwait(false);
+            var transaction = queryDispatcher.BeginTransaction(connectionName);
             transactions.Add(connectionName, transaction);
         }
 

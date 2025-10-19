@@ -14,10 +14,10 @@ public class QueryDispatcher(IEnumerable<IQueryExecutor> queryExecutors) : IQuer
         return await connectionWithExecutor.QueryExecutor.QueryAsync(connectionWithExecutor.Connection.ConnectionString, sql, parameters).ConfigureAwait(false);
     }
 
-    public async Task<ITransaction> BeginTransactionAsync(string connectionName)
+    public ITransaction BeginTransaction(string connectionName)
     {
         var connectionWithExecutor = GetConnectionWithExecutor(connectionName);
-        return await connectionWithExecutor.QueryExecutor.BeginTransactionAsync(connectionWithExecutor.Connection.ConnectionString).ConfigureAwait(false);
+        return connectionWithExecutor.QueryExecutor.BeginTransaction(connectionWithExecutor.Connection.ConnectionString);
     }
 
     public void InitializeExecutors(IDictionary<string, Connection> connections)

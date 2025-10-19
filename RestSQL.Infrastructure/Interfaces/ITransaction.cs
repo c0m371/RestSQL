@@ -2,7 +2,7 @@ using System;
 
 namespace RestSQL.Infrastructure.Interfaces;
 
-public interface ITransaction : IAsyncDisposable, IDisposable
+public interface ITransaction : IDisposable
 {
     /// <summary>
     /// Execute a SQL query that returns a result row.
@@ -17,10 +17,10 @@ public interface ITransaction : IAsyncDisposable, IDisposable
     /// <summary>
     /// Commit the transaction.
     /// </summary>
-    Task CommitAsync();
+    void Commit();
 
     /// <summary>
     /// Rollback the transaction.
     /// </summary>
-    Task RollbackAsync();
+    void Rollback();
 }
