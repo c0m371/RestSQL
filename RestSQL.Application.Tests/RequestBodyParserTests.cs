@@ -4,7 +4,6 @@ using System.Text.Json.Nodes;
 
 namespace RestSQL.Application.Tests;
 
-
 public class RequestBodyParserTests
 {
     private readonly RequestBodyParser _parser;
@@ -21,10 +20,10 @@ public class RequestBodyParserTests
     }
 
     [Fact]
-    public void ReadAndParseJsonStream_ShouldReturnNulls_WhenStreamIsNull()
+    public async Task ReadAndParseJsonStream_ShouldReturnNulls_WhenStreamIsNull()
     {
         // Act
-        var result = _parser.ReadAndParseJsonStream(null);
+        var result = await _parser.ReadAndParseJsonStreamAsync(null);
 
         // Assert
         Assert.Null(result.jsonValue);
@@ -32,13 +31,13 @@ public class RequestBodyParserTests
     }
 
     [Fact]
-    public void ReadAndParseJsonStream_ShouldReturnNullNodeAndEmptyString_WhenStreamIsEmpty()
+    public async Task ReadAndParseJsonStream_ShouldReturnNullNodeAndEmptyString_WhenStreamIsEmpty()
     {
         // Arrange
         using var stream = CreateStream("");
 
         // Act
-        var result = _parser.ReadAndParseJsonStream(stream);
+        var result = await _parser.ReadAndParseJsonStreamAsync(stream);
 
         // Assert
         Assert.Null(result.jsonValue);
@@ -46,14 +45,14 @@ public class RequestBodyParserTests
     }
 
     [Fact]
-    public void ReadAndParseJsonStream_ShouldParseValidJsonObjectAndCaptureString()
+    public async Task ReadAndParseJsonStream_ShouldParseValidJsonObjectAndCaptureString()
     {
         // Arrange
         const string jsonContent = """{"id":123, "name":"Test"}""";
         using var stream = CreateStream(jsonContent);
 
         // Act
-        var result = _parser.ReadAndParseJsonStream(stream);
+        var result = await _parser.ReadAndParseJsonStreamAsync(stream);
 
         // Assert
         Assert.NotNull(result.jsonValue);
@@ -66,14 +65,14 @@ public class RequestBodyParserTests
     }
 
     [Fact]
-    public void ReadAndParseJsonStream_ShouldParseValidJsonArrayAndCaptureString()
+    public async Task ReadAndParseJsonStream_ShouldParseValidJsonArrayAndCaptureString()
     {
         // Arrange
         const string jsonContent = """[1, 2, 3]""";
         using var stream = CreateStream(jsonContent);
 
         // Act
-        var result = _parser.ReadAndParseJsonStream(stream);
+        var result = await _parser.ReadAndParseJsonStreamAsync(stream);
 
         // Assert
         Assert.NotNull(result.jsonValue);
@@ -86,7 +85,7 @@ public class RequestBodyParserTests
     }
 
     [Fact]
-    public void ReadAndParseJsonStream_ShouldReturnNullNode_WhenJsonIsInvalid()
+    public async Task ReadAndParseJsonStream_ShouldReturnNullNode_WhenJsonIsInvalid()
     {
         // Arrange
         // Invalid JSON: missing closing brace
@@ -94,7 +93,7 @@ public class RequestBodyParserTests
         using var stream = CreateStream(invalidJson);
 
         // Act
-        var result = _parser.ReadAndParseJsonStream(stream);
+        var result = await _parser.ReadAndParseJsonStreamAsync(stream);
 
         // Assert
         Assert.Null(result.jsonValue); // JsonNode should be null due to the catch(JsonException)

@@ -16,7 +16,7 @@ public class EndpointServiceTests
     private readonly Mock<IQueryDispatcher> _queryDispatcherMock;
     private readonly Mock<IResultAggregator> _resultAggregatorMock;
     private readonly Mock<IRequestBodyParser> _requestBodyParserMock;
-    private readonly Mock<ILogger> _loggerMock;
+    private readonly Mock<ILogger<EndpointService>> _loggerMock;
     private readonly EndpointService _service;
 
     public EndpointServiceTests()
@@ -24,7 +24,7 @@ public class EndpointServiceTests
         _queryDispatcherMock = new Mock<IQueryDispatcher>();
         _resultAggregatorMock = new Mock<IResultAggregator>();
         _requestBodyParserMock = new Mock<IRequestBodyParser>();
-        _loggerMock = new Mock<ILogger>();
+        _loggerMock = new Mock<ILogger<EndpointService>>();
         _service = new EndpointService(_queryDispatcherMock.Object, _resultAggregatorMock.Object, _requestBodyParserMock.Object, _loggerMock.Object);
     }
 
@@ -35,7 +35,7 @@ public class EndpointServiceTests
         var endpoint = new Endpoint
         {
             Path = "/test",
-            Verb = "GET",
+            Method = "GET",
             StatusCode = 200,
             SqlQueries = new Dictionary<string, SqlQuery>
             {
@@ -96,7 +96,7 @@ public class EndpointServiceTests
         var endpoint = new Endpoint
         {
             Path = "/empty",
-            Verb = "GET",
+            Method = "GET",
             StatusCode = 200,
             SqlQueries = new Dictionary<string, SqlQuery>(),
             OutputStructure = new OutputField
@@ -129,7 +129,7 @@ public class EndpointServiceTests
         var endpoint = new Endpoint
         {
             Path = "/single",
-            Verb = "GET",
+            Method = "GET",
             StatusCode = 200,
             SqlQueries = new Dictionary<string, SqlQuery>
             {
@@ -176,7 +176,7 @@ public class EndpointServiceTests
         var endpoint = new Endpoint
         {
             Path = "/error",
-            Verb = "GET",
+            Method = "GET",
             StatusCode = 200,
             SqlQueries = new Dictionary<string, SqlQuery>
             {
@@ -215,7 +215,7 @@ public class EndpointServiceTests
         {
             // Note: SqlQueries is empty so we can focus solely on WriteOperations
             Path = "insert",
-            Verb = "POST",
+            Method = "POST",
             StatusCode = 201,
             SqlQueries = new Dictionary<string, SqlQuery>(),
             WriteOperations = new List<WriteOperation>
@@ -262,7 +262,7 @@ public class EndpointServiceTests
         {
             SqlQueries = new Dictionary<string, SqlQuery>(),
             Path = "insert",
-            Verb = "POST",
+            Method = "POST",
             StatusCode = 201,
             WriteOperations = new List<WriteOperation>
             {
@@ -309,7 +309,7 @@ public class EndpointServiceTests
         var endpoint = new Endpoint
         {
             Path = "insert",
-            Verb = "POST",
+            Method = "POST",
             StatusCode = 201,
             SqlQueries = new Dictionary<string, SqlQuery>(),
             WriteOperations = new List<WriteOperation>
@@ -332,8 +332,8 @@ public class EndpointServiceTests
         { }
 
         _requestBodyParserMock
-            .Setup(p => p.ReadAndParseJsonStream(bodyStream))
-            .Returns((parsedBody, body))
+            .Setup(p => p.ReadAndParseJsonStreamAsync(bodyStream))
+            .ReturnsAsync((parsedBody, body))
             .Verifiable();
 
         var transactionMock = new Mock<ITransaction>();
@@ -368,7 +368,7 @@ public class EndpointServiceTests
         var endpoint = new Endpoint
         {
             Path = "insert",
-            Verb = "POST",
+            Method = "POST",
             StatusCode = 201,
             SqlQueries = new Dictionary<string, SqlQuery>(),
             WriteOperations = new List<WriteOperation>
@@ -385,8 +385,8 @@ public class EndpointServiceTests
         // Mock parser to return a JsonObject
         var parsedBody = JsonNode.Parse(bodyStream) as JsonObject;
         _requestBodyParserMock
-            .Setup(p => p.ReadAndParseJsonStream(It.IsAny<Stream>()))
-            .Returns((parsedBody, body))
+            .Setup(p => p.ReadAndParseJsonStreamAsync(It.IsAny<Stream>()))
+            .ReturnsAsync((parsedBody, body))
             .Verifiable();
 
         var transactionMock = new Mock<ITransaction>();
@@ -425,7 +425,7 @@ public class EndpointServiceTests
         {
             // Note: SqlQueries is empty so we can focus solely on WriteOperations
             Path = "insert",
-            Verb = "POST",
+            Method = "POST",
             StatusCode = 201,
             SqlQueries = new Dictionary<string, SqlQuery>(),
             WriteOperations = new List<WriteOperation>

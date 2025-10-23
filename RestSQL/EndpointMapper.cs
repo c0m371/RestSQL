@@ -8,10 +8,7 @@ public static class EndpointMapper
     {
         foreach (var endpoint in config.Endpoints)
         {
-            if (endpoint.Verb != "GET")
-                throw new NotSupportedException("Only HTTPGET supported for now");
-
-            webApplication.MapGet(endpoint.Path, async (HttpRequest request, IEndpointService endpointService) =>
+            webApplication.MapMethods(endpoint.Path, [endpoint.Method], async (HttpRequest request, IEndpointService endpointService) =>
             {
                 var parameters = new Dictionary<string, object?>();
                 request.RouteValues.ToList().ForEach(kvp => parameters.Add(kvp.Key, kvp.Value));

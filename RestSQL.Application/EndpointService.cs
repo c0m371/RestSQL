@@ -7,7 +7,7 @@ using System.Text.Json.Nodes;
 
 namespace RestSQL.Application;
 
-public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator resultAggregator, IRequestBodyParser requestBodyParser, ILogger logger) : IEndpointService
+public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator resultAggregator, IRequestBodyParser requestBodyParser, ILogger<EndpointService> logger) : IEndpointService
 {
     public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
@@ -20,7 +20,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         if (!endpoint.WriteOperations.Any())
             return;
 
-        (var parsedBody, var stringBody) = requestBodyParser.ReadAndParseJsonStream(body);
+        (var parsedBody, var stringBody) = await requestBodyParser.ReadAndParseJsonStreamAsync(body).ConfigureAwait(false);
 
         var transactions = new Dictionary<string, ITransaction>();
         try

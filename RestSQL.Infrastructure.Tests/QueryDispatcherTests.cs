@@ -92,7 +92,7 @@ public class QueryDispatcherTests
     }
 
     [Fact]
-    public async Task BeginTransactionAsync_ReturnsTransaction_WhenInitialized()
+    public void BeginTransaction_ReturnsTransaction_WhenInitialized()
     {
         // Arrange
         const string expectedConnectionString = "CS_TX";
@@ -121,7 +121,7 @@ public class QueryDispatcherTests
     }
 
     [Fact]
-    public async Task BeginTransactionAsync_Throws_WhenNotInitialized()
+    public void BeginTransaction_Throws_WhenNotInitialized()
     {
         // Arrange
         var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() });
@@ -134,14 +134,14 @@ public class QueryDispatcherTests
     }
 
     [Fact]
-    public async Task BeginTransactionAsync_Throws_WhenConnectionNotFound()
+    public void BeginTransaction_Throws_WhenConnectionNotFound()
     {
         // Arrange
         var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() });
         var connections = new Dictionary<string, Connection>
-    {
-        { "conn1", new Connection { Type = DatabaseType.PostgreSQL, ConnectionString = "CS1" } }
-    };
+        {
+            { "conn1", new Connection { Type = DatabaseType.PostgreSQL, ConnectionString = "CS1" } }
+        };
         dispatcher.InitializeExecutors(connections);
 
         // Act + Assert

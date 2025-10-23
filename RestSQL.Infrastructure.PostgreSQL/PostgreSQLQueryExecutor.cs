@@ -17,7 +17,6 @@ public class PostgreSQLQueryExecutor : IQueryExecutor
 
     public DatabaseType Type => DatabaseType.PostgreSQL;
 
-
     public async Task<IEnumerable<IDictionary<string, object?>>> QueryAsync(string connectionString, string sql, IDictionary<string, object?> parameters)
     {
         using var connection = connectionFactory.CreatePostgreSQLConnection(connectionString);
