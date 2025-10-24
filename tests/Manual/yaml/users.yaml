@@ -1,0 +1,46 @@
+endpoints:
+  - path: /api/users
+    method: GET
+    statusCode: 200
+    sqlQueries:
+      users:
+        connectionName: blog
+        sql: >
+          select *
+          from users;
+    outputStructure:
+      type: Object
+      isArray: true
+      queryName: users
+      fields:
+        - { type: String, name: username, columnName: username }
+        - { type: String, name: firstName, columnName: first_name }
+        - { type: String, name: lastName, columnName: last_name }
+
+  - path: /api/users
+    method: POST
+    statusCode: 200
+    writeOperations:
+      - connectionName: blog
+        sql: >
+          insert into users (username, first_name, last_name)
+          values (:username, :firstName, :lastName)
+          returning username;
+        bodyType: Object
+        outputCaptures:
+          - columnName: username
+            parameterName: username
+    sqlQueries:
+      user:
+        connectionName: blog
+        sql: >
+          select *
+          from users
+          where username = :username;
+    outputStructure:
+      type: Object
+      queryName: user
+      fields:
+        - { type: String, name: username, columnName: username }
+        - { type: String, name: firstName, columnName: first_name }
+        - { type: String, name: lastName, columnName: last_name }

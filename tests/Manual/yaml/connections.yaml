@@ -1,0 +1,4 @@
+connections:
+  blog:
+    type: PostgreSQL
+    connectionString: Host=localhost;Database=restsql_blog;Username=restsql_blog;Password=restsql_blog

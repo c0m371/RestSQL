@@ -9,8 +9,10 @@ CREATE TABLE public.users (
 
 DROP TABLE if exists public.posts;
 
+-- Note: FK to users missing
 CREATE TABLE public.posts (
 	id int4 GENERATED ALWAYS AS IDENTITY NOT NULL,
+	username varchar not null,
 	title varchar NOT NULL,
 	description varchar NULL,
 	creation_date date NOT NULL,
@@ -19,6 +21,7 @@ CREATE TABLE public.posts (
 
 DROP TABLE if exists public.tags;
 
+-- Note: FK to posts missing
 CREATE TABLE public.tags (
 	post_id int4 NOT NULL,
 	tag varchar NOT NULL,
@@ -32,20 +35,20 @@ INSERT INTO public.users (username, first_name, last_name) VALUES
 
 -- Insert 4 posts (ID is GENERATED ALWAYS AS IDENTITY)
 -- Post 1 (Author: alice_codes)
-INSERT INTO public.posts (title, description, creation_date) VALUES
-('The Joys of Async/Await', 'A deep dive into non-blocking operations in C#.', CURRENT_DATE);
+INSERT INTO public.posts (title, description, creation_date, username) VALUES
+('The Joys of Async/Await', 'A deep dive into non-blocking operations in C#.', CURRENT_DATE, 'alice_codes');
 
 -- Post 2 (Author: alice_codes)
-INSERT INTO public.posts (title, description, creation_date) VALUES
-('PostgreSQL vs MySQL: A Performance Review', 'Comparing the speed and features of two popular databases.', CURRENT_DATE - INTERVAL '1 day');
+INSERT INTO public.posts (title, description, creation_date, username) VALUES
+('PostgreSQL vs MySQL: A Performance Review', 'Comparing the speed and features of two popular databases.', CURRENT_DATE - INTERVAL '1 day', 'alice_codes');
 
 -- Post 3 (Author: bob_devs)
-INSERT INTO public.posts (title, description, creation_date) VALUES
-('Understanding the SOLID Principles', 'A beginner''s guide to maintaining clean, scalable code.', CURRENT_DATE - INTERVAL '7 days');
+INSERT INTO public.posts (title, description, creation_date, username) VALUES
+('Understanding the SOLID Principles', 'A beginner''s guide to maintaining clean, scalable code.', CURRENT_DATE - INTERVAL '7 days', 'bob_devs');
 
 -- Post 4 (Author: bob_devs)
-INSERT INTO public.posts (title, description, creation_date) VALUES
-('Advanced Dapper Mappings', 'How to handle complex type projections and multi-mapping with Dapper.', CURRENT_DATE - INTERVAL '3 days');
+INSERT INTO public.posts (title, description, creation_date, username) VALUES
+('Advanced Dapper Mappings', 'How to handle complex type projections and multi-mapping with Dapper.', CURRENT_DATE - INTERVAL '3 days', 'bob_devs');
 
 -- Insert 6 tags
 INSERT INTO public.tags (post_id, tag) VALUES
