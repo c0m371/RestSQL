@@ -44,7 +44,7 @@ connections:
     connectionString: ""Data Source=1""
 endpoints:
   - path: ""/test1""
-    verb: ""GET""
+    method: ""GET""
     statusCode: 200
     sqlQueries: {}
     outputStructure: {}
@@ -55,7 +55,7 @@ connections:
     connectionString: ""Data Source=2""
 endpoints:
   - path: ""/test2""
-    verb: ""POST""
+    method: ""POST""
     statusCode: 201
     sqlQueries: {}
     outputStructure: {}

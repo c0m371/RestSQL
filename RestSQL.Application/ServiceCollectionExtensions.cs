@@ -10,5 +10,6 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddSingleton<IEndpointService, EndpointService>();
         serviceCollection.AddSingleton<IYamlConfigReader, YamlConfigReader>();
         serviceCollection.AddSingleton<IResultAggregator, ResultAggregator>();
+        serviceCollection.AddSingleton<IRequestBodyParser, RequestBodyParser>();
     }
 }

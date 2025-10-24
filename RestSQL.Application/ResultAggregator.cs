@@ -13,14 +13,14 @@ public class ResultAggregator : IResultAggregator
         if (jsonStructure.IsArray)
             return ProcessArray(queryResults, jsonStructure, null);
 
-        if (jsonStructure.QueryName == null)
+        if (jsonStructure.QueryName is null)
             throw new ArgumentException("Root object has no QueryName defined", nameof(jsonStructure));
 
         if (!queryResults.TryGetValue(jsonStructure.QueryName, out var queryResult))
             throw new ArgumentException($"Query result '{jsonStructure.QueryName}' not found", nameof(jsonStructure));
 
         var firstResult = queryResult.FirstOrDefault();
-        return firstResult == null ? null : ProcessRow(queryResults, firstResult, jsonStructure);
+        return firstResult is null ? null : ProcessRow(queryResults, firstResult, jsonStructure);
     }
 
     private JsonArray ProcessArray(
@@ -28,13 +28,13 @@ public class ResultAggregator : IResultAggregator
         OutputField field,
         object? linkValue)
     {
-        if (field.QueryName == null)
+        if (field.QueryName is null)
             throw new ArgumentException($"Array field '{field.Name ?? "<unnamed>"}' must have QueryName defined", nameof(field));
 
         if (!allQueryResults.TryGetValue(field.QueryName, out var queryResult))
             throw new ArgumentException($"Query result '{field.QueryName}' not found", nameof(field));
 
-        if (field.LinkColumn != null)
+        if (field.LinkColumn is not null)
             queryResult = queryResult.Where(q => Equals(GetValue(q, field.LinkColumn), linkValue));
 
         var jsonArray = new JsonArray();
@@ -50,7 +50,7 @@ public class ResultAggregator : IResultAggregator
     {
         if (field.Type == OutputFieldType.Object)
         {
-            if (field.Fields == null)
+            if (field.Fields is null)
                 throw new ArgumentException($"Object field '{field.Name ?? "<unnamed>"}' must have Fields defined", nameof(field));
 
             var jsonObject = new JsonObject();
@@ -59,26 +59,26 @@ public class ResultAggregator : IResultAggregator
             {
                 if (subField.IsArray)
                 {
-                    if (subField.Name == null)
+                    if (subField.Name is null)
                         throw new ArgumentException("Array fields inside objects must have a Name defined", nameof(subField));
 
                     jsonObject[subField.Name] =
                         ProcessArray(
                             allQueryResults,
                             subField,
-                            subField.LinkColumn != null ? GetValue(result, subField.LinkColumn) : null
+                            subField.LinkColumn is not null ? GetValue(result, subField.LinkColumn) : null
                         );
                 }
                 else if (subField.Type == OutputFieldType.Object)
                 {
-                    if (subField.Name == null)
+                    if (subField.Name is null)
                         throw new ArgumentException("Object fields inside objects must have a Name defined", nameof(subField));
 
                     jsonObject[subField.Name] = ProcessRow(allQueryResults, result, subField);
                 }
                 else
                 {
-                    if (subField.Name == null)
+                    if (subField.Name is null)
                         throw new ArgumentException("Primitive fields inside objects must have a Name defined", nameof(subField));
 
                     jsonObject[subField.Name] = GetPrimitiveValue(result, subField);
@@ -88,7 +88,6 @@ public class ResultAggregator : IResultAggregator
             return jsonObject;
         }
 
-        // Primitive at root or inside array
         return GetPrimitiveValue(result, field);
     }
 
@@ -116,9 +115,9 @@ public class ResultAggregator : IResultAggregator
         if (row.TryGetValue(columnName, out var value))
             return value;
 
-        // Cse-insensitive fallback
+        // Case-insensitive fallback
         var altKey = row.Keys.FirstOrDefault(k => string.Equals(k, columnName, StringComparison.OrdinalIgnoreCase));
-        if (altKey != null)
+        if (altKey is not null)
             return row[altKey];
 
         throw new ArgumentException($"Column '{columnName}' not found in query result row.");

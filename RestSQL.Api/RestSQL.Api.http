@@ -1,6 +1,15 @@
-@RestSQL.Api_HostAddress = http://localhost:5240
+@RestSQL.Api_HostAddress = https://localhost:7017
 
-GET {{RestSQL.Api_HostAddress}}/weatherforecast/
+###
+GET {{RestSQL.Api_HostAddress}}/api/users
 Accept: application/json
 
 ###
+POST {{RestSQL.Api_HostAddress}}/api/users
+Content-Type: application/json
+
+{
+    "username": "tom",
+    "firstName": "Tom",
+    "lastName": "Coene"
+}
