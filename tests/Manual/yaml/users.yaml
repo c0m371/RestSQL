@@ -12,7 +12,7 @@ endpoints:
       type: Object
       isArray: true
       queryName: users
-      fields:
+      fields: &userFields
         - { type: String, name: username, columnName: username }
         - { type: String, name: firstName, columnName: first_name }
         - { type: String, name: lastName, columnName: last_name }
@@ -40,7 +40,4 @@ endpoints:
     outputStructure:
       type: Object
       queryName: user
-      fields:
-        - { type: String, name: username, columnName: username }
-        - { type: String, name: firstName, columnName: first_name }
-        - { type: String, name: lastName, columnName: last_name }
+      fields: *userFields

@@ -8,7 +8,7 @@ endpoints:
         sql: >
           select id post_id, title, description, creation_date, username
           from posts;
-      tags:
+      tags: &tagsQuery
         connectionName: blog
         sql: >
           select *
@@ -18,7 +18,7 @@ endpoints:
       type: Object
       isArray: true
       queryName: posts
-      fields:
+      fields: &postFields
         - { type: Long, name: id, columnName: post_id }
         - { type: String, name: title, columnName: title }
         - { type: String, name: description, columnName: description }
@@ -30,6 +30,7 @@ endpoints:
           queryName: tags
           columnName: tag
           linkColumn: post_id
+        
   - path: /api/posts
     method: POST
     statusCode: 200
@@ -50,25 +51,9 @@ endpoints:
           select id post_id, title, description, creation_date, username
           from posts
           where id = @post_id;
-      tags:
-        connectionName: blog
-        sql: >
-          select *
-          from tags
-          where post_id = @post_id;
+      tags: *tagsQuery
     outputStructure:
       type: Object
       isArray: true
       queryName: posts
-      fields:
-        - { type: Long, name: id, columnName: post_id }
-        - { type: String, name: title, columnName: title }
-        - { type: String, name: description, columnName: description }
-        - { type: String, name: username, columnName: username }
-        - { type: String, name: creationDate, columnName: creation_date }
-        - type: string
-          isArray: true
-          name: tags
-          queryName: tags
-          columnName: tag
-          linkColumn: post_id
+      fields: *postFields

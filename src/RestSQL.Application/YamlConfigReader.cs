@@ -19,6 +19,7 @@ public class YamlConfigReader : IYamlConfigReader
 
         var deserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
+            .IgnoreUnmatchedProperties()
             .Build();
 
         var allConfigs = files.Select(file =>
