@@ -9,22 +9,26 @@
 
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.10" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="Npgsql" Version="9.0.3" />
+    <PackageReference Include="Testcontainers.PostgreSql" Version="4.8.1" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
-    <PackageReference Include="Dapper" Version="2.1.66" />
-    <PackageReference Include="Npgsql" Version="9.0.3" />
-    <PackageReference Include="Moq" Version="4.20.72" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\RestSQL.Api\RestSQL.Api.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="PostgreSQL\Yaml\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
     <Using Include="Xunit" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\RestSQL.Domain\RestSQL.Domain.csproj" />
-    <ProjectReference Include="..\..\src\RestSQL.Infrastructure.PostgreSQL\RestSQL.Infrastructure.PostgreSQL.csproj" />
-    <ProjectReference Include="..\..\src\RestSQL.Infrastructure\RestSQL.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

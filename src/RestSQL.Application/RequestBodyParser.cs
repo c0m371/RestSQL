@@ -16,28 +16,10 @@ public class RequestBodyParser : IRequestBodyParser
         Converters = { new JsonStringEnumConverter() }
     };
 
-    public async Task<(JsonNode? jsonValue, string? stringValue)> ReadAndParseJsonStreamAsync(Stream? stream)
+    public async Task<JsonNode?> ReadAndParseJsonStreamAsync(Stream? stream)
     {
         if (stream is null)
-            return (null, null);
-
-        if (!stream.CanSeek)
-        {
-            // Copy the content to a seekable MemoryStream
-            var memoryStream = new MemoryStream();
-            await stream.CopyToAsync(memoryStream).ConfigureAwait(false);
-            stream = memoryStream;
-            stream.Position = 0;
-        }
-
-        string? stringValue = null;
-
-        using (var reader = new StreamReader(stream, leaveOpen: true))
-        {
-            stringValue = await reader.ReadToEndAsync().ConfigureAwait(false);
-        }
-
-        stream.Position = 0;
+            return null;
 
         JsonNode? jsonValue = null;
 
@@ -50,6 +32,6 @@ public class RequestBodyParser : IRequestBodyParser
             // Ignore parsing errors, return null for jsonValue
         }
 
-        return (jsonValue, stringValue);
+        return jsonValue;
     }
 }
