@@ -20,7 +20,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         if (!endpoint.WriteOperations.Any())
             return;
 
-        (var parsedBody, var stringBody) = await requestBodyParser.ReadAndParseJsonStreamAsync(body).ConfigureAwait(false);
+        var parsedBody = await requestBodyParser.ReadAndParseJsonStreamAsync(body).ConfigureAwait(false);
 
         var transactions = new Dictionary<string, ITransaction>();
         try
@@ -29,7 +29,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
 
             foreach (var writeOperation in endpoint.WriteOperations)
             {
-                var capturedOutput = await ProcessWriteOperation(parsedBody, stringBody, transactions, writeOperation, parameterValues).ConfigureAwait(false);
+                var capturedOutput = await ProcessWriteOperation(parsedBody, transactions, writeOperation, parameterValues).ConfigureAwait(false);
 
                 foreach (var output in capturedOutput)
                     if (!parameterValues.TryAdd(output.Key, output.Value))
@@ -49,13 +49,13 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         }
     }
 
-    private static async Task<IDictionary<string, object?>> ProcessWriteOperation(JsonNode? parsedBody, string? stringBody, Dictionary<string, ITransaction> transactions, WriteOperation writeOperation, IDictionary<string, object?> parameterValues)
+    private static async Task<IDictionary<string, object?>> ProcessWriteOperation(JsonNode? parsedBody, Dictionary<string, ITransaction> transactions, WriteOperation writeOperation, IDictionary<string, object?> parameterValues)
     {
         var transaction = transactions[writeOperation.ConnectionName];
 
         var parametersForWriteOperation = new Dictionary<string, object?>(parameterValues);
 
-        MergeBodyParameters(parsedBody, stringBody, writeOperation, parametersForWriteOperation);
+        MergeBodyParameters(parsedBody, writeOperation, parametersForWriteOperation);
 
         if (writeOperation.OutputCaptures.Any())
         {
@@ -77,15 +77,15 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         return new Dictionary<string, object?>();
     }
 
-    private static void MergeBodyParameters(JsonNode? parsedBody, string? stringBody, WriteOperation writeOperation, Dictionary<string, object?> parametersForWriteOperation)
+    private static void MergeBodyParameters(JsonNode? parsedBody, WriteOperation writeOperation, Dictionary<string, object?> parametersForWriteOperation)
     {
-        if (writeOperation.BodyType == WriteOperationBodyType.Raw)
+        if (writeOperation.BodyType == WriteOperationBodyType.Value)
         {
-            if (writeOperation.RawBodyParameterName is null)
-                throw new InvalidOperationException("Cannot use body as parameter value if no BodyParameterName is provided");
+            if (writeOperation.ValueParameterName is null)
+                throw new InvalidOperationException("Cannot use body as parameter value if no ValueParameterName is provided");
 
-            if (!parametersForWriteOperation.TryAdd(writeOperation.RawBodyParameterName, stringBody))
-                throw new InvalidOperationException($"Cannot add body parameter '{writeOperation.RawBodyParameterName}' to parameters for write operation. A parameter with the same name already exists.");
+            if (!parametersForWriteOperation.TryAdd(writeOperation.ValueParameterName, GetClrValue(parsedBody?.AsValue())))
+                throw new InvalidOperationException($"Cannot add body parameter '{writeOperation.ValueParameterName}' to parameters for write operation. A parameter with the same name already exists.");
         }
         else if (writeOperation.BodyType == WriteOperationBodyType.Object)
         {
@@ -105,8 +105,11 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         }
     }
 
-    private static object? GetClrValue(JsonValue jsonValue)
+    private static object? GetClrValue(JsonValue? jsonValue)
     {
+        if (jsonValue is null)
+            return null;
+            
         object? clrValue;
         clrValue = jsonValue.GetValueKind() switch
         {
@@ -178,6 +181,9 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
                     .Select(async q => new { Name = q.Key, Result = await queryDispatcher.QueryAsync(q.Value.ConnectionName, q.Value.Sql, parameterValues).ConfigureAwait(false) });
         var taskResults = await Task.WhenAll(queryTasks).ConfigureAwait(false);
         var queryResults = taskResults.ToDictionary(r => r.Name, r => r.Result);
+
+        if (endpoint.OutputStructure is null)
+            return null;
 
         return resultAggregator.Aggregate(queryResults, endpoint.OutputStructure);
     }

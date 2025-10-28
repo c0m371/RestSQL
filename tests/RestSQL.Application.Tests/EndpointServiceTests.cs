@@ -302,7 +302,7 @@ public class EndpointServiceTests
     }
 
     [Fact]
-    public async Task GetEndpointResult_ShouldParseBodyAndAddRawParameter()
+    public async Task GetEndpointResult_ShouldParseBodyAndAddValueParameter()
     {
         // Arrange
         var rawParamName = "body";
@@ -314,12 +314,12 @@ public class EndpointServiceTests
             SqlQueries = new Dictionary<string, SqlQuery>(),
             WriteOperations = new List<WriteOperation>
             {
-                new() { ConnectionName = "conn1", Sql = "INSERT @body", BodyType = WriteOperationBodyType.Raw, RawBodyParameterName = rawParamName }
+                new() { ConnectionName = "conn1", Sql = "INSERT @body", BodyType = WriteOperationBodyType.Value, ValueParameterName = rawParamName }
             },
             OutputStructure = new OutputField { Type = OutputFieldType.Object, IsArray = false }
         };
         var parameters = new Dictionary<string, object?>();
-        var body = "value";
+        var body = "\"value\"";
         var bodyStream = new MemoryStream(Encoding.UTF8.GetBytes(body));
 
         // Mock parser to return a JsonObject (the Raw type handles any JsonNode)
@@ -333,7 +333,7 @@ public class EndpointServiceTests
 
         _requestBodyParserMock
             .Setup(p => p.ReadAndParseJsonStreamAsync(bodyStream))
-            .ReturnsAsync((parsedBody, body))
+            .ReturnsAsync(parsedBody)
             .Verifiable();
 
         var transactionMock = new Mock<ITransaction>();
@@ -386,7 +386,7 @@ public class EndpointServiceTests
         var parsedBody = JsonNode.Parse(bodyStream) as JsonObject;
         _requestBodyParserMock
             .Setup(p => p.ReadAndParseJsonStreamAsync(It.IsAny<Stream>()))
-            .ReturnsAsync((parsedBody, body))
+            .ReturnsAsync(parsedBody)
             .Verifiable();
 
         var transactionMock = new Mock<ITransaction>();
@@ -483,5 +483,57 @@ public class EndpointServiceTests
         Assert.Equal("existingValue", inputParametersForOperation2["existingParameter"]);
         Assert.Equal("Value1", inputParametersForOperation2["Param1"]);
         Assert.Equal("Value2", inputParametersForOperation2["Param2"]);
+    }
+
+    [Fact]
+    public async Task GetEndpointResult_ShouldReturnNullWhenOutputStructureNull()
+    {
+        // Arrange
+        var endpoint = new Endpoint
+        {
+            // Note: SqlQueries is empty so we can focus solely on WriteOperations
+            Path = "insert",
+            Method = "POST",
+            StatusCode = 201,
+            SqlQueries = new Dictionary<string, SqlQuery>(),
+            WriteOperations = new List<WriteOperation>
+            {
+                new() {
+                    ConnectionName = "conn1",
+                    Sql = "INSERT 1",
+                    BodyType = WriteOperationBodyType.None
+                },
+                new() { ConnectionName = "conn1", Sql = "INSERT 2", BodyType = WriteOperationBodyType.None }
+            },
+            OutputStructure = null
+        };
+
+        var transactionMock = new Mock<ITransaction>();
+
+        _queryDispatcherMock
+            .Setup(q => q.BeginTransaction("conn1"))
+            .Returns(transactionMock.Object);
+
+        transactionMock
+            .Setup(t => t.ExecuteNonQueryAsync("INSERT 1", It.IsAny<IDictionary<string, object?>>()))
+            .Returns(Task.FromResult(1))
+            .Verifiable();
+
+        transactionMock
+            .Setup(t => t.ExecuteNonQueryAsync("INSERT 2", It.IsAny<IDictionary<string, object?>>()))
+            .Returns(Task.FromResult(1))
+            .Verifiable();
+
+        // Act
+        var result = await _service.GetEndpointResultAsync(endpoint, new Dictionary<string, object?>(), null);
+
+        // Assert
+
+        // Should return null
+        Assert.Null(result);
+        // Aggregator should not be called
+        _resultAggregatorMock.Verify(a =>
+            a.Aggregate(It.IsAny<IDictionary<string, IEnumerable<IDictionary<string, object?>>>>(), It.IsAny<OutputField>()),
+            Times.Never);
     }
 }

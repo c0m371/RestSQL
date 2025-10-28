@@ -16,7 +16,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RestSQL.Application\RestSQL.Application.csproj" />
+    <ProjectReference Include="..\..\src\RestSQL.Application\RestSQL.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

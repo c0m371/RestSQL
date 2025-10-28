@@ -6,8 +6,9 @@ endpoints:
       posts:
         connectionName: blog
         sql: >
-          select id post_id, title, description, creation_date, username
-          from posts;
+          select id post_id, title, description, to_char(creation_date, 'YYYY-MM-DD HH24:MI:SS') creation_date, username
+          from posts
+          order by id;
       tags: &tagsQuery
         connectionName: blog
         sql: >
@@ -38,7 +39,7 @@ endpoints:
       - connectionName: blog
         sql: >
           insert into posts (title, description, creation_date, username)
-          values (:title, :description, current_timestamp, :username)
+          values (:title, :description, :creationDate::timestamptz, :username)
           returning id;
         bodyType: Object
         outputCaptures:
@@ -48,7 +49,7 @@ endpoints:
       posts:
         connectionName: blog
         sql: >
-          select id post_id, title, description, creation_date, username
+          select id post_id, title, description, to_char(creation_date, 'YYYY-MM-DD HH24:MI:SS') creation_date, username
           from posts
           where id = @post_id;
       tags: *tagsQuery
@@ -56,3 +57,14 @@ endpoints:
       type: Object
       queryName: posts
       fields: *postFields
+
+  - path: /api/posts/{id:long}/tags
+    method: POST
+    statusCode: 200
+    writeOperations:
+      - connectionName: blog
+        sql: >
+          insert into tags (post_id, tag)
+          values (:id::int, :tag);
+        bodyType: Value
+        valueParameterName: tag

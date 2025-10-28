@@ -26,8 +26,7 @@ public class RequestBodyParserTests
         var result = await _parser.ReadAndParseJsonStreamAsync(null);
 
         // Assert
-        Assert.Null(result.jsonValue);
-        Assert.Null(result.stringValue);
+        Assert.Null(result);
     }
 
     [Fact]
@@ -40,12 +39,11 @@ public class RequestBodyParserTests
         var result = await _parser.ReadAndParseJsonStreamAsync(stream);
 
         // Assert
-        Assert.Null(result.jsonValue);
-        Assert.Equal("", result.stringValue);
+        Assert.Null(result);
     }
 
     [Fact]
-    public async Task ReadAndParseJsonStream_ShouldParseValidJsonObjectAndCaptureString()
+    public async Task ReadAndParseJsonStream_ShouldParseValidJsonObject()
     {
         // Arrange
         const string jsonContent = """{"id":123, "name":"Test"}""";
@@ -55,17 +53,16 @@ public class RequestBodyParserTests
         var result = await _parser.ReadAndParseJsonStreamAsync(stream);
 
         // Assert
-        Assert.NotNull(result.jsonValue);
-        Assert.IsType<JsonObject>(result.jsonValue);
-        Assert.Equal(jsonContent, result.stringValue);
+        Assert.NotNull(result);
+        Assert.IsType<JsonObject>(result);
 
         // Verify a value
-        var jsonObject = result.jsonValue as JsonObject;
+        var jsonObject = result as JsonObject;
         Assert.Equal(123, jsonObject?["id"]?.GetValue<int>());
     }
 
     [Fact]
-    public async Task ReadAndParseJsonStream_ShouldParseValidJsonArrayAndCaptureString()
+    public async Task ReadAndParseJsonStream_ShouldParseValidJsonArray()
     {
         // Arrange
         const string jsonContent = """[1, 2, 3]""";
@@ -75,12 +72,11 @@ public class RequestBodyParserTests
         var result = await _parser.ReadAndParseJsonStreamAsync(stream);
 
         // Assert
-        Assert.NotNull(result.jsonValue);
-        Assert.IsType<JsonArray>(result.jsonValue);
-        Assert.Equal(jsonContent, result.stringValue);
+        Assert.NotNull(result);
+        Assert.IsType<JsonArray>(result);
 
         // Verify array count
-        var jsonArray = result.jsonValue as JsonArray;
+        var jsonArray = result as JsonArray;
         Assert.Equal(3, jsonArray?.Count);
     }
 
@@ -96,7 +92,6 @@ public class RequestBodyParserTests
         var result = await _parser.ReadAndParseJsonStreamAsync(stream);
 
         // Assert
-        Assert.Null(result.jsonValue); // JsonNode should be null due to the catch(JsonException)
-        Assert.Equal(invalidJson, result.stringValue); // Raw string must still be captured
+        Assert.Null(result); // JsonNode should be null due to the catch(JsonException)
     }
 }

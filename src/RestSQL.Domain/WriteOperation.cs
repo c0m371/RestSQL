@@ -6,12 +6,12 @@ public record WriteOperation
     public required string Sql { get; init; }
     public IList<OutputCapture> OutputCaptures { get; init; } = [];
     public WriteOperationBodyType BodyType { get; set; }
-    public string? RawBodyParameterName { get; init; }
+    public string? ValueParameterName { get; init; }
 }
 
 public enum WriteOperationBodyType
 {
     None,
-    Raw,
+    Value,
     Object
 }
