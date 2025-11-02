@@ -1,6 +1,7 @@
 using RestSQL.Application;
 using RestSQL.Infrastructure;
 using RestSQL.Infrastructure.PostgreSQL;
+using RestSQL.Infrastructure.SqlServer;
 
 namespace RestSQL;
 
@@ -10,6 +11,7 @@ public static class ServiceCollectionExtensions
     {
         serviceCollection.AddRestSQLInfrastructure();
         serviceCollection.AddPostgreSQL();
+        serviceCollection.AddSqlServer();
         serviceCollection.AddRestSQLApplication();
     }
 }

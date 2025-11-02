@@ -1,11 +1,5 @@
-using Xunit;
 using Moq;
 using System.Data;
-using System.Threading.Tasks;
-using System.Collections.Generic;
-using RestSQL.Infrastructure.Interfaces;
-using System;
-using Dapper;
 using RestSQL.Domain;
 
 namespace RestSQL.Infrastructure.Dapper.Tests;

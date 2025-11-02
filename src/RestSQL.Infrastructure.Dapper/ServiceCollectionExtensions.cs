@@ -1,6 +1,4 @@
-using System;
 using Microsoft.Extensions.DependencyInjection;
-using RestSQL.Infrastructure.Interfaces;
 
 namespace RestSQL.Infrastructure.Dapper;
 

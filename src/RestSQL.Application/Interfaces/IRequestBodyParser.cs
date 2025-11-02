@@ -1,4 +1,3 @@
-using System;
 using System.Text.Json.Nodes;
 
 namespace RestSQL.Application.Interfaces;

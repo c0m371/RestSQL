@@ -1,6 +1,5 @@
 using System.Data;
 using RestSQL.Domain;
-using RestSQL.Infrastructure.Dapper;
 using RestSQL.Infrastructure.Interfaces;
 
 namespace RestSQL.Infrastructure.Dapper;

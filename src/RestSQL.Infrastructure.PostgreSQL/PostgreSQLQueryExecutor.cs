@@ -1,4 +1,3 @@
-using System;
 using RestSQL.Domain;
 using RestSQL.Infrastructure.Dapper;
 

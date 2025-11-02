@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace RestSQL.IntegrationTests.SqlServer
+﻿namespace RestSQL.IntegrationTests.SqlServer
 {
     public class SqlServerTests : PostsTestsBase<SqlServerFixture>
     {

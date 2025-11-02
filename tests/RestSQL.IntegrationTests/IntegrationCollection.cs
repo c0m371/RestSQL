@@ -1,5 +1,3 @@
-using System;
-
 namespace RestSQL.IntegrationTests;
 
 [CollectionDefinition("Integration")]

@@ -1,5 +1,3 @@
-using System;
-
 namespace RestSQL.IntegrationTests;
 
 public interface IDatabaseFixture : IAsyncLifetime
