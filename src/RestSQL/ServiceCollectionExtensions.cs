@@ -8,8 +8,8 @@ public static class ServiceCollectionExtensions
 {
     public static void AddRestSQL(this IServiceCollection serviceCollection)
     {
-        serviceCollection.AddRestSQLData();
-        serviceCollection.AddPostgreSQLExecutor();
+        serviceCollection.AddRestSQLInfrastructure();
+        serviceCollection.AddPostgreSQL();
         serviceCollection.AddRestSQLApplication();
     }
 }

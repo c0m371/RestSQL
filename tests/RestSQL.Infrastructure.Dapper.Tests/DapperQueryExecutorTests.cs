@@ -9,32 +9,38 @@ using System;
 using Dapper;
 using System.Dynamic;
 
-namespace RestSQL.Infrastructure.PostgreSQL.Tests;
+namespace RestSQL.Infrastructure.Dapper.Tests;
 
-public class PostgreSQLQueryExecutorTests
+public class DapperQueryExecutorTests
 {
-    private readonly Mock<IPostgreSQLConnectionFactory> _mockFactory;
+    private readonly Mock<IConnectionFactory> _mockFactory;
     private readonly Mock<IDbConnection> _mockConnection;
-    private readonly Mock<IPostgreSQLDataAccess> _mockDataAccess;
-    private readonly PostgreSQLQueryExecutor _executor;
-    
-    public PostgreSQLQueryExecutorTests()
+    private readonly Mock<IDataAccess> _mockDataAccess;
+    private readonly DapperQueryExecutor _executor;
+
+    public DapperQueryExecutorTests()
     {
         // 1. Setup Mocks
-        _mockFactory = new Mock<IPostgreSQLConnectionFactory>();
+        _mockFactory = new Mock<IConnectionFactory>();
         _mockConnection = new Mock<IDbConnection>();
-        _mockDataAccess = new Mock<IPostgreSQLDataAccess>();
+        _mockDataAccess = new Mock<IDataAccess>();
 
         // 2. Configure the Factory to return our Mock Connection
         _mockFactory
-            .Setup(f => f.CreatePostgreSQLConnection(It.IsAny<string>()))
+            .Setup(f => f.CreateConnection(It.IsAny<string>()))
             .Returns(_mockConnection.Object);
 
-        // 3. Instantiate the Executor with the Mock Factory
-        _executor = new PostgreSQLQueryExecutor(_mockFactory.Object, _mockDataAccess.Object);
-        
+        // 3. Instantiate a small concrete executor (DapperQueryExecutor is abstract)
+        _executor = new TestExecutor(_mockFactory.Object, _mockDataAccess.Object);
+
         // Setup mock connection disposal for QueryAsync test
         _mockConnection.Setup(c => c.Dispose());
+    }
+
+    private class TestExecutor : DapperQueryExecutor
+    {
+        public TestExecutor(IConnectionFactory factory, IDataAccess dataAccess) : base(factory, dataAccess) { }
+        public override DatabaseType Type => DatabaseType.PostgreSQL;
     }
 
     // --------------------------------------------------------------------------------
@@ -55,13 +61,13 @@ public class PostgreSQLQueryExecutorTests
         const string sql = "SELECT * FROM test";
         var parameters = new Dictionary<string, object?> { { "id", 1 } };
         var expectedResults = new List<IDictionary<string, object?>>
-        {
-            new Dictionary<string, object?> { { "col1", "data1" } }
-        };
+            {
+                new Dictionary<string, object?> { { "col1", "data1" } }
+            };
 
         _mockDataAccess.Setup(d => d.QueryAsync(
             _mockConnection.Object, // Verify correct connection is passed
-            sql, 
+            sql,
             parameters))
             .ReturnsAsync(expectedResults);
 
@@ -71,9 +77,9 @@ public class PostgreSQLQueryExecutorTests
         // Assert
         var dict = Assert.Single(result);
         Assert.Equal("data1", dict["col1"]);
-        
+
         // Verify dependency calls
-        _mockFactory.Verify(f => f.CreatePostgreSQLConnection(connString), Times.Once, "Factory must be called to create connection.");
+        _mockFactory.Verify(f => f.CreateConnection(connString), Times.Once, "Factory must be called to create connection.");
         _mockDataAccess.Verify(c => c.QueryAsync(_mockConnection.Object, sql, parameters), Times.Once, "Dapper Query must be executed.");
         _mockConnection.Verify(c => c.Dispose(), Times.Once, "Connection must be disposed by the 'using' block.");
     }
@@ -87,26 +93,26 @@ public class PostgreSQLQueryExecutorTests
     {
         // Arrange
         const string connString = "Host=test;DB=test";
-        
-        // For this test, we must assume that the internal PostgreSQLTransaction 
-        // constructor correctly performs the Open() and BeginTransaction() calls on the connection.
-        
-        // We verify that the connection is created via the factory.
-        
+
+        // Prepare mock connection to behave like a real connection
+        var mockTransaction = new Mock<IDbTransaction>();
+        _mockConnection.Setup(c => c.BeginTransaction()).Returns(mockTransaction.Object);
+        _mockConnection.SetupGet(c => c.State).Returns(ConnectionState.Closed);
+        _mockConnection.Setup(c => c.Open()).Verifiable();
+
         // Act
-        // This call executes the real PostgreSQLTransaction constructor logic on our mock connection.
         var transaction = _executor.BeginTransaction(connString);
 
         // Assert
         Assert.NotNull(transaction);
-        Assert.IsAssignableFrom<ITransaction>(transaction);
-        
+        Assert.IsAssignableFrom<RestSQL.Infrastructure.Interfaces.ITransaction>(transaction);
+
         // Verify dependency calls
-        _mockFactory.Verify(f => f.CreatePostgreSQLConnection(connString), Times.Once, "Factory must be called to create connection.");
-        
-        // Verify the steps that the PostgreSQLTransaction constructor should have executed on the mock connection:
+        _mockFactory.Verify(f => f.CreateConnection(connString), Times.Once, "Factory must be called to create connection.");
+
+        // Verify the steps that the transaction constructor should have executed on the mock connection:
         _mockConnection.VerifyGet(c => c.State, Times.AtLeastOnce, "Connection state must be checked.");
-        _mockConnection.Verify(c => c.Open(), Times.Once, "Connection must be opened by PostgreSQLTransaction.");
-        _mockConnection.Verify(c => c.BeginTransaction(), Times.Once, "Transaction must be started by PostgreSQLTransaction.");
+        _mockConnection.Verify(c => c.Open(), Times.Once, "Connection must be opened by transaction implementation.");
+        _mockConnection.Verify(c => c.BeginTransaction(), Times.Once, "Transaction must be started by transaction implementation.");
     }
 }
