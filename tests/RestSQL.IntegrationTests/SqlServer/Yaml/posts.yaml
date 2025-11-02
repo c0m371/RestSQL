@@ -14,7 +14,7 @@ endpoints:
         sql: >
           select *
           from Tags
-          where PostId = @PostId;
+          order by PostId, Tag;
     outputStructure:
       type: Object
       isArray: true
@@ -39,11 +39,11 @@ endpoints:
       - connectionName: blog
         sql: >
           insert into Posts (Title, Description, CreationDate, Username)
-          values (@title, @description, convert(datetime, @creationDate), @username)
-          returning id;
+          output inserted.Id
+          values (@title, @description, convert(datetime, @creationDate), @username);
         bodyType: Object
         outputCaptures:
-          - columnName: id
+          - columnName: Id
             parameterName: PostId
     sqlQueries:
       posts:
@@ -58,13 +58,13 @@ endpoints:
       queryName: posts
       fields: *postFields
 
-  - path: /api/posts/{id:long}/tags
+  - path: /api/posts/{Id:long}/tags
     method: POST
     statusCode: 200
     writeOperations:
       - connectionName: blog
         sql: >
           insert into tags (PostId, Tag)
-          values (convert(int, @id), @tag);
+          values (convert(int, @Id), @Tag);
         bodyType: Value
-        valueParameterName: tag
+        valueParameterName: Tag

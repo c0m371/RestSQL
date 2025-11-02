@@ -14,7 +14,7 @@ endpoints:
         sql: >
           select *
           from tags
-          where post_id = @post_id;
+          order by post_id, tag;
     outputStructure:
       type: Object
       isArray: true
