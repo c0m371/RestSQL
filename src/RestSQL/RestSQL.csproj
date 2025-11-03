@@ -11,6 +11,7 @@
     <ProjectReference Include="..\RestSQL.Application\RestSQL.Application.csproj" />
     <ProjectReference Include="..\RestSQL.Domain\RestSQL.Domain.csproj" />
     <ProjectReference Include="..\RestSQL.Infrastructure.Dapper\RestSQL.Infrastructure.Dapper.csproj" />
+    <ProjectReference Include="..\RestSQL.Infrastructure.MySql\RestSQL.Infrastructure.MySql.csproj" />
     <ProjectReference Include="..\RestSQL.Infrastructure.PostgreSQL\RestSQL.Infrastructure.PostgreSQL.csproj" />
     <ProjectReference Include="..\RestSQL.Infrastructure.SqlServer\RestSQL.Infrastructure.SqlServer.csproj" />
     <ProjectReference Include="..\RestSQL.Infrastructure\RestSQL.Infrastructure.csproj" />

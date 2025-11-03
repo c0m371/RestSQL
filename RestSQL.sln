@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Infrastructure.Dapp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Infrastructure.Dapper.Tests", "tests\RestSQL.Infrastructure.Dapper.Tests\RestSQL.Infrastructure.Dapper.Tests.csproj", "{26311B5E-FBB9-4E71-997D-EA214F3C3E94}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RestSQL.Infrastructure.MySql", "src\RestSQL.Infrastructure.MySql\RestSQL.Infrastructure.MySql.csproj", "{A4402C8C-3B8B-417B-82DE-BA9796597E21}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -181,6 +183,18 @@ Global
 		{26311B5E-FBB9-4E71-997D-EA214F3C3E94}.Release|x64.Build.0 = Release|Any CPU
 		{26311B5E-FBB9-4E71-997D-EA214F3C3E94}.Release|x86.ActiveCfg = Release|Any CPU
 		{26311B5E-FBB9-4E71-997D-EA214F3C3E94}.Release|x86.Build.0 = Release|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Debug|x64.Build.0 = Debug|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Debug|x86.Build.0 = Debug|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Release|x64.ActiveCfg = Release|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Release|x64.Build.0 = Release|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Release|x86.ActiveCfg = Release|Any CPU
+		{A4402C8C-3B8B-417B-82DE-BA9796597E21}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

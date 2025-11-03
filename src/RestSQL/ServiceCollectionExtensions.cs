@@ -1,6 +1,7 @@
 using RestSQL.Application;
 using RestSQL.Infrastructure;
 using RestSQL.Infrastructure.Dapper;
+using RestSQL.Infrastructure.MySql;
 using RestSQL.Infrastructure.PostgreSQL;
 using RestSQL.Infrastructure.SqlServer;
 
@@ -15,5 +16,6 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddRestSQLInfrastructureDapper();
         serviceCollection.AddPostgreSQL();
         serviceCollection.AddSqlServer();
+        serviceCollection.AddMySql();
     }
 }
