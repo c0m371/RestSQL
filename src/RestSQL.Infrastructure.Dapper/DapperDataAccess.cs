@@ -1,10 +1,9 @@
 using System.Data;
-using System.Diagnostics.CodeAnalysis;
 using Dapper;
 
-namespace RestSQL.Infrastructure.PostgreSQL;
+namespace RestSQL.Infrastructure.Dapper;
 
-public class PostgreSQLDataAccess : IPostgreSQLDataAccess
+public class DapperDataAccess : IDataAccess
 {
     public async Task<int> ExecuteAsync(IDbConnection connection, string sql, object? param, IDbTransaction? transaction)
     {

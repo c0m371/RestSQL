@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\RestSQL.Domain\RestSQL.Domain.csproj" />
-    <ProjectReference Include="..\..\src\RestSQL.Infrastructure.PostgreSQL\RestSQL.Infrastructure.PostgreSQL.csproj" />
+    <ProjectReference Include="..\..\src\RestSQL.Infrastructure.Dapper\RestSQL.Infrastructure.Dapper.csproj" />
     <ProjectReference Include="..\..\src\RestSQL.Infrastructure\RestSQL.Infrastructure.csproj" />
   </ItemGroup>
 

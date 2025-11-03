@@ -5,7 +5,7 @@ namespace RestSQL.Infrastructure;
 
 public static class ServiceCollectionExtensions
 {
-    public static void AddRestSQLData(this IServiceCollection serviceCollection)
+    public static void AddRestSQLInfrastructure(this IServiceCollection serviceCollection)
     {
         serviceCollection.AddSingleton<IQueryDispatcher, QueryDispatcher>();
     }

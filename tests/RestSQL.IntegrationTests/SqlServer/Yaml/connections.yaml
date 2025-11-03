@@ -1,0 +1,4 @@
+connections:
+  blog:
+    type: SqlServer
+    connectionString: <connectionString>

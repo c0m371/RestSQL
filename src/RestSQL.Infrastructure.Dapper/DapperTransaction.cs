@@ -1,17 +1,16 @@
 using System.Data;
-using Dapper;
 using RestSQL.Infrastructure.Interfaces;
 
-namespace RestSQL.Infrastructure.PostgreSQL;
+namespace RestSQL.Infrastructure.Dapper;
 
-internal class PostgreSQLTransaction : ITransaction
+public class DapperTransaction : ITransaction
 {
     private IDbConnection connection;
     private IDbTransaction transaction;
-    private IPostgreSQLDataAccess dataAccess;
+    private IDataAccess dataAccess;
     private bool disposed;
 
-    internal PostgreSQLTransaction(IDbConnection connection, IPostgreSQLDataAccess dataAccess)
+    internal DapperTransaction(IDbConnection connection, IDataAccess dataAccess)
     {
         this.connection = connection;
         this.dataAccess = dataAccess;
@@ -37,13 +36,13 @@ internal class PostgreSQLTransaction : ITransaction
 
     public void Commit()
     {
-        if (disposed) throw new ObjectDisposedException(nameof(PostgreSQLTransaction));
+        if (disposed) throw new ObjectDisposedException(nameof(DapperTransaction));
         transaction.Commit();
     }
 
     public void Rollback()
     {
-        if (disposed) throw new ObjectDisposedException(nameof(PostgreSQLTransaction));
+        if (disposed) throw new ObjectDisposedException(nameof(DapperTransaction));
         transaction.Rollback();
     }
 

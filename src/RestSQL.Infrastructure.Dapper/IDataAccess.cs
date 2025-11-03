@@ -1,8 +1,8 @@
 using System.Data;
 
-namespace RestSQL.Infrastructure.PostgreSQL;
+namespace RestSQL.Infrastructure.Dapper;
 
-public interface IPostgreSQLDataAccess
+public interface IDataAccess
 {
     Task<IEnumerable<IDictionary<string, object?>>> QueryAsync(
         IDbConnection connection,

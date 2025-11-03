@@ -1,5 +1,3 @@
-using System;
-
 namespace RestSQL.Infrastructure.Interfaces;
 
 public interface ITransaction : IDisposable

@@ -3,11 +3,9 @@ using Moq;
 using RestSQL.Application.Interfaces;
 using RestSQL.Domain;
 using RestSQL.Infrastructure.Interfaces;
-using System.Diagnostics.Metrics;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using YamlDotNet.Core.Tokens;
 
 namespace RestSQL.Application.Tests;
 
