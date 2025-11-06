@@ -12,7 +12,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
     public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
         logger.LogInformation("Handling {method} {path} (status {status}) with {paramCount} initial parameters",
-            endpoint.Method, endpoint.Path, endpoint.StatusCode, parameterValues?.Count ?? 0);
+            endpoint.Method, endpoint.Path, endpoint.StatusCode, parameterValues.Count);
 
         try
         {
@@ -136,7 +136,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
     {
         if (jsonValue is null)
             return null;
-            
+
         object? clrValue;
         clrValue = jsonValue.GetValueKind() switch
         {
