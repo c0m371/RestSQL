@@ -5,6 +5,7 @@ using RestSQL.Infrastructure.MySql;
 using RestSQL.Infrastructure.PostgreSQL;
 using RestSQL.Infrastructure.SqlServer;
 using RestSQL.Infrastructure.Oracle;
+using RestSQL.Infrastructure.Sqlite;
 
 namespace RestSQL;
 
@@ -19,5 +20,6 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddSqlServer();
         serviceCollection.AddMySql();
         serviceCollection.AddOracle();
+        serviceCollection.AddSqlite();
     }
 }

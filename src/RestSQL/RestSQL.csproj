@@ -14,6 +14,7 @@
     <ProjectReference Include="..\RestSQL.Infrastructure.MySql\RestSQL.Infrastructure.MySql.csproj" />
     <ProjectReference Include="..\RestSQL.Infrastructure.Oracle\RestSQL.Infrastructure.Oracle.csproj" />
     <ProjectReference Include="..\RestSQL.Infrastructure.PostgreSQL\RestSQL.Infrastructure.PostgreSQL.csproj" />
+    <ProjectReference Include="..\RestSQL.Infrastructure.Sqlite\RestSQL.Infrastructure.Sqlite.csproj" />
     <ProjectReference Include="..\RestSQL.Infrastructure.SqlServer\RestSQL.Infrastructure.SqlServer.csproj" />
     <ProjectReference Include="..\RestSQL.Infrastructure\RestSQL.Infrastructure.csproj" />
   </ItemGroup>

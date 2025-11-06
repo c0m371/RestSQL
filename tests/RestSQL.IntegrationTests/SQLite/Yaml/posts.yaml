@@ -1,0 +1,70 @@
+endpoints:
+  - path: /api/posts
+    method: GET
+    statusCode: 200
+    sqlQueries:
+      posts:
+        connectionName: blog
+        sql: >
+          select id as post_id, title, description, strftime('%Y-%m-%d %H:%M:%S', creation_date) as creation_date, username
+          from posts
+          order by id;
+      tags: &tagsQuery
+        connectionName: blog
+        sql: >
+          select *
+          from tags
+          order by post_id, tag;
+    outputStructure:
+      type: Object
+      isArray: true
+      queryName: posts
+      fields: &postFields
+        - { type: Long, name: id, columnName: post_id }
+        - { type: String, name: title, columnName: title }
+        - { type: String, name: description, columnName: description }
+        - { type: String, name: username, columnName: username }
+        - { type: String, name: creationDate, columnName: creation_date }
+        - type: string
+          isArray: true
+          name: tags
+          queryName: tags
+          columnName: tag
+          linkColumn: post_id
+        
+  - path: /api/posts
+    method: POST
+    statusCode: 200
+    writeOperations:
+      - connectionName: blog
+        sql: >
+          insert into posts (title, description, creation_date, username)
+          values (@title, @description, @creationDate, @username);
+          select last_insert_rowid() as id;
+        bodyType: Object
+        outputCaptures:
+          - columnName: id
+            parameterName: post_id
+    sqlQueries:
+      posts:
+        connectionName: blog
+        sql: >
+          select id as post_id, title, description, strftime('%Y-%m-%d %H:%M:%S', creation_date) as creation_date, username
+          from posts
+          where id = @post_id;
+      tags: *tagsQuery
+    outputStructure:
+      type: Object
+      queryName: posts
+      fields: *postFields
+
+  - path: /api/posts/{id:long}/tags
+    method: POST
+    statusCode: 200
+    writeOperations:
+      - connectionName: blog
+        sql: >
+          insert into tags (post_id, tag)
+          values (@id, @tag);
+        bodyType: Value
+        valueParameterName: tag
