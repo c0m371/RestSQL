@@ -1,15 +1,19 @@
 ﻿using System.Text;
 using System.Text.Json.Nodes;
+using Microsoft.Extensions.Logging;
+using Moq;
 
 namespace RestSQL.Application.Tests;
 
 public class RequestBodyParserTests
 {
     private readonly RequestBodyParser _parser;
+    private readonly Mock<ILogger<RequestBodyParser>> _loggerMock;
 
     public RequestBodyParserTests()
     {
-        _parser = new RequestBodyParser();
+        _loggerMock = new Mock<ILogger<RequestBodyParser>>();
+        _parser = new RequestBodyParser(_loggerMock.Object);
     }
 
     // Helper to create a MemoryStream from a string

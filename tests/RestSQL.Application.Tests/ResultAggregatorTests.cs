@@ -1,4 +1,6 @@
 ﻿using System.Text.Json.Nodes;
+using Microsoft.Extensions.Logging;
+using Moq;
 using RestSQL.Application.Interfaces;
 using RestSQL.Domain;
 
@@ -6,7 +8,14 @@ namespace RestSQL.Application.Tests;
 
 public class ResultAggregatorTests
 {
-    private readonly IResultAggregator _aggregator = new ResultAggregator();
+    private readonly Mock<ILogger<ResultAggregator>> _loggerMock;
+    private readonly IResultAggregator _aggregator;
+
+    public ResultAggregatorTests()
+    {
+        _loggerMock = new Mock<ILogger<ResultAggregator>>();
+        _aggregator = new ResultAggregator(_loggerMock.Object);
+    }
 
     [Fact]
     public void Root_Primitive_ReturnsValue()

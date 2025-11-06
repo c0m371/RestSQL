@@ -11,14 +11,14 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
 {
     public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
-        logger.LogInformation("Handling {method} {path} (status {status}) with {paramCount} initial parameters",
+        logger.LogDebug("Handling {method} {path} (status {status}) with {paramCount} initial parameters",
             endpoint.Method, endpoint.Path, endpoint.StatusCode, parameterValues.Count);
 
         try
         {
             await ExecuteWriteOperations(endpoint, parameterValues, body).ConfigureAwait(false);
             var result = await ExecuteQueries(endpoint, parameterValues).ConfigureAwait(false);
-            logger.LogInformation("Finished handling {method} {path}", endpoint.Method, endpoint.Path);
+            logger.LogDebug("Finished handling {method} {path}", endpoint.Method, endpoint.Path);
             return result;
         }
         catch (Exception ex)
@@ -43,11 +43,11 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         try
         {
             transactions = BeginTransactions(endpoint);
-            logger.LogInformation("Began transactions for connections: {connections}", string.Join(',', transactions.Keys));
+            logger.LogDebug("Began transactions for connections: {connections}", string.Join(',', transactions.Keys));
 
             foreach (var writeOperation in endpoint.WriteOperations)
             {
-                logger.LogInformation("Executing write operation on connection={conn} sql={sql}", writeOperation.ConnectionName, writeOperation.Sql);
+                logger.LogDebug("Executing write operation on connection={conn} sql={sql}", writeOperation.ConnectionName, writeOperation.Sql);
                 var capturedOutput = await ProcessWriteOperation(parsedBody, transactions, writeOperation, parameterValues).ConfigureAwait(false);
 
                 if (capturedOutput.Any())
@@ -61,7 +61,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
             }
 
             CommitTransactions(transactions);
-            logger.LogInformation("Committed transactions for endpoint {path}", endpoint.Path);
+            logger.LogDebug("Committed transactions for endpoint {path}", endpoint.Path);
         }
         catch (Exception ex)
         {
@@ -155,7 +155,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         foreach (var kvp in transactions)
         {
             kvp.Value.Commit();
-            logger.LogInformation("Commited transaction {name}", kvp.Key);
+            logger.LogDebug("Commited transaction {name}", kvp.Key);
         }
     }
 
