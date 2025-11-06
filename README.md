@@ -1,6 +1,6 @@
 # RestSQL Documentation
 
-RestSQL is a lightweight, high-performance SQL to REST API generator for .NET. It automatically creates REST endpoints from SQL queries defined in YAML configuration files.
+RestSQL is a lightweight .NET tool that turns SQL queries (defined in YAML) into ready-to-run REST endpoints. Works standalone or as a library, supports transactions, nested JSON output, and multiple database providers.
 
 ## Getting Started
 
