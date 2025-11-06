@@ -38,8 +38,6 @@ cd src/RestSQL.Api
 dotnet run
 ```
 
-This will start a standalone API server with OpenAPI/Swagger documentation available at `/swagger` in development mode.
-
 ### 2. Library Usage (Adding to Existing Project)
 
 Add RestSQL to your ASP.NET Core project:
@@ -54,14 +52,17 @@ app.UseRestSQL("path/to/config/folder");
 
 ## Configuration
 
-RestSQL uses YAML files for configuration. You need two types of files:
+RestSQL uses YAML files for configuration. You need two main configuration sections:
 
-1. `connections.yaml` - Database connection definitions
-2. Additional YAML files - Endpoint definitions
+1. connections - Database connection definitions
+2. endpoints - Endpoint definitions
+
+You can split these across files as you see fit, they will be merged.
+A single file is also fine. 
 
 ### Database Connections
 
-Define your database connections in `connections.yaml`:
+Define your database connections under connections:
 
 ```yaml
 connections:
@@ -84,24 +85,41 @@ connections:
 
 ### Endpoint Configuration
 
-Define REST endpoints in YAML files:
+Define REST endpoints:
 
 ```yaml
 endpoints:
+  # Get all posts with tags
   - path: /api/posts
     method: GET
     statusCode: 200
     sqlQueries:
-      posts: 
-        connectionName: postgres1
-        sql: |
-          SELECT p.*, u.first_name, u.last_name 
-          FROM posts p
-          JOIN users u ON p.username = u.username
+      posts:
+        connectionName: blog
+        sql: >
+          select id post_id, title, description, creation_date, username
+          from posts;
+      tags: &tagsQuery
+        connectionName: blog
+        sql: >
+          select *
+          from tags;
     outputStructure:
-      type: object
+      type: Object
       isArray: true
       queryName: posts
+      fields: &postFields
+        - { type: Long, name: id, columnName: post_id }
+        - { type: String, name: title, columnName: title }
+        - { type: String, name: description, columnName: description }
+        - { type: String, name: username, columnName: username }
+        - { type: String, name: creationDate, columnName: creation_date }
+        - type: string
+          isArray: true
+          name: tags
+          queryName: tags
+          columnName: tag
+          linkColumn: post_id
 ```
 
 ## Example Blog API
@@ -109,53 +127,92 @@ endpoints:
 Let's look at a complete blog post API example:
 
 ```yaml
+connections:
+  blog:
+    type: PostgreSQL
+    connectionString: "Host=localhost;Database=restsql_blog;Username=restsql_blog;Password=restsql_blog"
+
 endpoints:
-  # Get all posts with authors and tags
+  # Get all posts with tags
   - path: /api/posts
     method: GET
     statusCode: 200
     sqlQueries:
       posts:
-        connectionName: postgres1
-        sql: |
-          SELECT 
-            p.id,
-            p.title,
-            p.description,
-            p.creation_date as "creationDate",
-            p.username,
-            array_agg(t.tag) as tags
-          FROM posts p
-          LEFT JOIN tags t ON t.post_id = p.id
-          GROUP BY p.id, p.title, p.description, p.creation_date, p.username
-          ORDER BY p.creation_date DESC
+        connectionName: blog
+        sql: >
+          select id post_id, title, description, creation_date, username
+          from posts;
+      tags: &tagsQuery
+        connectionName: blog
+        sql: >
+          select *
+          from tags;
+    outputStructure:
+      type: Object
+      isArray: true
+      queryName: posts
+      fields: &postFields
+        - { type: Long, name: id, columnName: post_id }
+        - { type: String, name: title, columnName: title }
+        - { type: String, name: description, columnName: description }
+        - { type: String, name: username, columnName: username }
+        - { type: String, name: creationDate, columnName: creation_date }
+        - type: string
+          isArray: true
+          name: tags
+          queryName: tags
+          columnName: tag
+          linkColumn: post_id
+      
+  # Get specific post
+  - path: /api/posts/{id}
+    method: GET
+    statusCode: 200
+    sqlQueries:
+      posts:
+        connectionName: blog
+        sql: >
+          select id post_id, title, description, creation_date, username
+          from posts
+          where id = :id::int;
+      tags: &tagsQuery
+        connectionName: blog
+        sql: >
+          select *
+          from tags;
+    outputStructure:
+      type: Object
+      isArray: true
+      queryName: posts
+      fields: *postFields
 
-  # Create new post
+  # Create new post, and return the created post
   - path: /api/posts
     method: POST
-    statusCode: 201
+    statusCode: 200
     writeOperations:
-      - connectionName: postgres1
-        sql: |
-          INSERT INTO posts (title, description, creation_date, username)
-          VALUES (@title, @description, @creationDate, @username)
-          RETURNING id
-        bodyType: object
+      - connectionName: blog
+        sql: >
+          insert into posts (title, description, creation_date, username)
+          values (:title, :description, current_timestamp, :username)
+          returning id;
+        bodyType: Object
         outputCaptures:
           - columnName: id
-            parameterName: id
-
-  # Add tag to post
-  - path: /api/posts/{id}/tags
-    method: POST 
-    statusCode: 201
-    writeOperations:
-      - connectionName: postgres1
-        sql: |
-          INSERT INTO tags (post_id, tag)
-          VALUES (@id, @tag)
-        bodyType: value
-        valueParameterName: tag
+            parameterName: post_id
+    sqlQueries:
+      posts:
+        connectionName: blog
+        sql: >
+          select id post_id, title, description, creation_date, username
+          from posts
+          where id = @post_id;
+      tags: *tagsQuery
+    outputStructure:
+      type: Object
+      queryName: posts
+      fields: *postFields
 ```
 
 ### Making Requests
@@ -183,45 +240,75 @@ POST /api/posts
 {
   "title": "PostgreSQL vs MySQL",
   "description": "A performance comparison",
-  "creationDate": "2025-10-26T16:05:15",
   "username": "bob_devs"
 }
 
 Response:
 {
-  "id": 2
+  "id": 2,
+  "title": "PostgreSQL vs MySQL",
+  "description": "A performance comparison",
+  "username": "bob_devs",
+  "creationDate": "06/11/2025 10:30:41",
+  "tags": []
 }
 ```
 
-Add tag:
+Get specific post:
 ```sh
-POST /api/posts/2/tags
-"Database"
+GET /api/posts/2
+
+Response:
+[
+  {
+    "id": 2,
+    "title": "PostgreSQL vs MySQL: A Performance Review",
+    "description": "Comparing the speed and features of two popular databases.",
+    "username": "alice_codes",
+    "creationDate": "22/10/2025 22:00:00",
+    "tags": [
+      "PostgreSQL",
+      "Database"
+    ]
+  }
+]
 ```
 
 ## Advanced Features
 
 ### Output Structure Transformation
 
-You can define complex nested JSON structures:
+You can define complex nested JSON structures.
+Queries can be linked through a linkColumn.
 
 ```yaml
-outputStructure:
-  type: object
-  isArray: true
-  fields:
-    - name: post
-      type: object
+    sqlQueries:
+      posts:
+        connectionName: blog
+        sql: >
+          select id post_id, title, description, creation_date, username
+          from posts;
+      tags:
+        connectionName: blog
+        sql: >
+          select *
+          from tags;
+    outputStructure:
+      type: Object
+      isArray: true
+      queryName: posts
       fields:
-        - name: id
-          type: number
-          columnName: id
-        - name: title
-          type: string
-          columnName: title
-    - name: tags
-      type: array
-      queryName: postTags
+        - { type: Long, name: id, columnName: post_id }
+        - { type: String, name: title, columnName: title }
+        - { type: String, name: description, columnName: description }
+        - { type: String, name: username, columnName: username }
+        - { type: String, name: creationDate, columnName: creation_date }
+        - type: string
+          isArray: true
+          name: tags
+          queryName: tags
+          columnName: tag
+          linkColumn: post_id
 ```
 
 ### Parameter Capture
@@ -260,12 +347,14 @@ writeOperations:
 ## Development Setup
 
 1. Clone the repository
-2. Install .NET 8.0 SDK
+2. Install .NET 9.0 SDK
 3. Run tests:
 
 ```sh
 dotnet test
 ```
+
+Note that docker should be running to be able to run the integration tests with test containers.
 
 4. Start the API:
 
