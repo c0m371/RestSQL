@@ -17,6 +17,8 @@
     <PackageReference Include="Testcontainers.MsSql" Version="4.8.1" />
     <PackageReference Include="Testcontainers.MySql" Version="4.8.1" />
     <PackageReference Include="Testcontainers.PostgreSql" Version="4.8.1" />
+    <PackageReference Include="Testcontainers.Oracle" Version="4.8.1" />
+    <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="23.26.0" />
     <PackageReference Include="xunit" Version="2.9.2" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
   </ItemGroup>
@@ -33,6 +35,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="MySql\Yaml\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Oracle\Yaml\**\*.*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

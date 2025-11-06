@@ -4,6 +4,7 @@ using RestSQL.Infrastructure.Dapper;
 using RestSQL.Infrastructure.MySql;
 using RestSQL.Infrastructure.PostgreSQL;
 using RestSQL.Infrastructure.SqlServer;
+using RestSQL.Infrastructure.Oracle;
 
 namespace RestSQL;
 
@@ -17,5 +18,6 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddPostgreSQL();
         serviceCollection.AddSqlServer();
         serviceCollection.AddMySql();
+        serviceCollection.AddOracle();
     }
 }

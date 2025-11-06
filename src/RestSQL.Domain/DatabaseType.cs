@@ -5,5 +5,6 @@ public enum DatabaseType
     PostgreSQL,
     SqlServer,
     Sqlite,
-    MySql
+    MySql,
+    Oracle
 }

@@ -1,0 +1,4 @@
+connections:
+  blog:
+    type: Oracle
+    connectionString: <connectionString>

@@ -1,4 +1,3 @@
-using System;
 using MySqlConnector;
 using Testcontainers.MySql;
 

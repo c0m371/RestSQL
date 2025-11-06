@@ -1,0 +1,81 @@
+endpoints:
+  - path: /api/posts
+    method: GET
+    statusCode: 200
+    sqlQueries:
+      posts:
+        connectionName: blog
+        sql: >
+          SELECT id AS PostId,
+                 title AS Title,
+                 description AS Description,
+                 TO_CHAR(creation_date, 'YYYY-MM-DD HH24:MI:SS') AS CreationDate,
+                 username AS Username
+          FROM posts
+          ORDER BY id
+      tags: &tagsQuery
+        connectionName: blog
+        sql: >
+          SELECT post_id AS PostId, tag AS Tag
+          FROM tags
+          ORDER BY PostId, Tag
+    outputStructure:
+      type: Object
+      isArray: true
+      queryName: posts
+      fields: &postFields
+        - { type: Long, name: id, columnName: PostId }
+        - { type: String, name: title, columnName: Title }
+        - { type: String, name: description, columnName: Description }
+        - { type: String, name: username, columnName: Username }
+        - { type: String, name: creationDate, columnName: CreationDate }
+        - type: String
+          isArray: true
+          name: tags
+          queryName: tags
+          columnName: Tag
+          linkColumn: PostId
+
+  - path: /api/posts
+    method: POST
+    statusCode: 200
+    writeOperations:
+      - connectionName: blog
+        sql: >
+          select posts_seq.nextval PostId from dual
+        bodyType: None
+        outputCaptures:
+          - columnName: POSTID
+            parameterName: PostId
+      - connectionName: blog
+        sql: >
+          INSERT INTO posts (id, title, description, creation_date, username)
+          VALUES (:PostId, :title, :description, TO_TIMESTAMP(:creationDate, 'yyyy-mm-dd"T"hh24:mi:ss.ff3'), :username)
+        bodyType: Object
+    sqlQueries:
+      posts:
+        connectionName: blog
+        sql: >
+          SELECT id AS PostId,
+                 title AS Title,
+                 description AS Description,
+                 TO_CHAR(creation_date, 'YYYY-MM-DD HH24:MI:SS') AS CreationDate,
+                 username AS Username
+          FROM posts
+          WHERE id = :PostId
+      tags: *tagsQuery
+    outputStructure:
+      type: Object
+      queryName: posts
+      fields: *postFields
+
+  - path: /api/posts/{Id:long}/tags
+    method: POST
+    statusCode: 200
+    writeOperations:
+      - connectionName: blog
+        sql: >
+          INSERT INTO tags (post_id, tag)
+          VALUES (:Id, :Tag)
+        bodyType: Value
+        valueParameterName: Tag

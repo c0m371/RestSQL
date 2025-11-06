@@ -1,4 +1,3 @@
-using System;
 using System.Data;
 using MySqlConnector;
 using RestSQL.Infrastructure.Dapper;

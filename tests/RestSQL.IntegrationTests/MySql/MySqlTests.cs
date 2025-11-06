@@ -1,5 +1,3 @@
-using System;
-
 namespace RestSQL.IntegrationTests.MySql;
 
 public class MySqlTests(MySqlFixture fixture) : PostsTestsBase<MySqlFixture>(fixture)
