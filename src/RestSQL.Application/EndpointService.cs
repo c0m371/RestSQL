@@ -11,25 +11,49 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
 {
     public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
-        await ExecuteWriteOperations(endpoint, parameterValues, body).ConfigureAwait(false);
-        return await ExecuteQueries(endpoint, parameterValues).ConfigureAwait(false);
+        logger.LogDebug("Handling {method} {path} (status {status}) with {paramCount} initial parameters",
+            endpoint.Method, endpoint.Path, endpoint.StatusCode, parameterValues.Count);
+
+        try
+        {
+            await ExecuteWriteOperations(endpoint, parameterValues, body).ConfigureAwait(false);
+            var result = await ExecuteQueries(endpoint, parameterValues).ConfigureAwait(false);
+            logger.LogDebug("Finished handling {method} {path}", endpoint.Method, endpoint.Path);
+            return result;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error while handling endpoint {method} {path}", endpoint.Method, endpoint.Path);
+            throw;
+        }
     }
 
     private async Task ExecuteWriteOperations(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
         if (!endpoint.WriteOperations.Any())
+        {
+            logger.LogDebug("No write operations for endpoint {path}", endpoint.Path);
             return;
+        }
 
         var parsedBody = await requestBodyParser.ReadAndParseJsonStreamAsync(body).ConfigureAwait(false);
+        logger.LogDebug("Parsed request body: {hasBody}", parsedBody is not null);
 
         var transactions = new Dictionary<string, ITransaction>();
         try
         {
             transactions = BeginTransactions(endpoint);
+            logger.LogDebug("Began transactions for connections: {connections}", string.Join(',', transactions.Keys));
 
             foreach (var writeOperation in endpoint.WriteOperations)
             {
+                logger.LogDebug("Executing write operation on connection={conn} sql={sql}", writeOperation.ConnectionName, writeOperation.Sql);
                 var capturedOutput = await ProcessWriteOperation(parsedBody, transactions, writeOperation, parameterValues).ConfigureAwait(false);
+
+                if (capturedOutput.Any())
+                {
+                    logger.LogDebug("Captured output parameters: {keys}", string.Join(',', capturedOutput.Keys));
+                }
 
                 foreach (var output in capturedOutput)
                     if (!parameterValues.TryAdd(output.Key, output.Value))
@@ -37,15 +61,18 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
             }
 
             CommitTransactions(transactions);
+            logger.LogDebug("Committed transactions for endpoint {path}", endpoint.Path);
         }
-        catch
+        catch (Exception ex)
         {
+            logger.LogError(ex, "Error during write operations for endpoint {path}. Initiating rollback.", endpoint.Path);
             RollbackTransactions(transactions);
             throw;
         }
         finally
         {
             DisposeTransactions(transactions);
+            logger.LogDebug("Disposed transactions for endpoint {path}", endpoint.Path);
         }
     }
 
@@ -109,7 +136,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
     {
         if (jsonValue is null)
             return null;
-            
+
         object? clrValue;
         clrValue = jsonValue.GetValueKind() switch
         {
@@ -128,7 +155,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
         foreach (var kvp in transactions)
         {
             kvp.Value.Commit();
-            logger.LogInformation("Commited transaction {name}", kvp.Key);
+            logger.LogDebug("Commited transaction {name}", kvp.Key);
         }
     }
 
@@ -168,6 +195,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
 
         foreach (var connectionName in endpoint.WriteOperations.Select(o => o.ConnectionName).Distinct())
         {
+            logger.LogDebug("Beginning transaction for connection {connection}", connectionName);
             var transaction = queryDispatcher.BeginTransaction(connectionName);
             transactions.Add(connectionName, transaction);
         }

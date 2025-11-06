@@ -1,11 +1,17 @@
+using Microsoft.Extensions.Logging;
+using Moq;
+
 namespace RestSQL.Application.Tests;
 
 public class YamlConfigReaderTests
 {
+    private readonly Mock<ILogger<YamlConfigReader>> _loggerMock = new Mock<ILogger<YamlConfigReader>>();
+    
+
     [Fact]
     public void Read_ThrowsArgumentException_WhenDirectoryDoesNotExist()
     {
-        var reader = new YamlConfigReader();
+        var reader = new YamlConfigReader(_loggerMock.Object);
         var path = Guid.NewGuid().ToString(); // unlikely to exist
 
         var ex = Assert.Throws<ArgumentException>(() => reader.Read(path));
@@ -20,7 +26,7 @@ public class YamlConfigReaderTests
 
         try
         {
-            var reader = new YamlConfigReader();
+            var reader = new YamlConfigReader(_loggerMock.Object);
             var ex = Assert.Throws<ArgumentException>(() => reader.Read(tempDir));
             Assert.Contains("doesn't contain yaml files", ex.Message);
         }
@@ -63,7 +69,7 @@ endpoints:
             File.WriteAllText(Path.Combine(tempDir, "a.yaml"), yaml1);
             File.WriteAllText(Path.Combine(tempDir, "b.yaml"), yaml2);
 
-            var reader = new YamlConfigReader();
+            var reader = new YamlConfigReader(_loggerMock.Object);
             var config = reader.Read(tempDir);
 
             Assert.True(config.Connections.ContainsKey("conn1"));

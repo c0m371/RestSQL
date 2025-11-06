@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using RestSQL.Domain;
 using RestSQL.Infrastructure.Interfaces;
 
@@ -5,14 +7,16 @@ namespace RestSQL.Infrastructure.Tests;
 
 public class QueryDispatcherTests
 {
+    private readonly ILogger<QueryDispatcher> _logger = NullLogger<QueryDispatcher>.Instance;
+
     // A simple fake implementation of ITransaction for testing purposes
     private record FakeTransaction : ITransaction
     {
         // These methods are not directly tested by the dispatcher, so we throw/ignore
         public Task<IDictionary<string, object?>> ExecuteQueryAsync(string sql, IDictionary<string, object?> parameters) => throw new NotImplementedException();
         public Task<int> ExecuteNonQueryAsync(string sql, IDictionary<string, object?> parameters) => throw new NotImplementedException();
-        public void Commit() {}
-        public void Rollback() {}
+        public void Commit() { }
+        public void Rollback() { }
         public void Dispose() { }
     }
 
@@ -43,7 +47,7 @@ public class QueryDispatcherTests
     [Fact]
     public async Task QueryAsync_Throws_WhenNotInitialized()
     {
-        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() });
+        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() }, _logger);
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() =>
             dispatcher.QueryAsync("conn", "SELECT 1", new Dictionary<string, object?>()));
         Assert.Contains("InitializeExecutors", ex.Message);
@@ -52,7 +56,7 @@ public class QueryDispatcherTests
     [Fact]
     public async Task QueryAsync_Throws_WhenConnectionNotFound()
     {
-        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() });
+        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() }, _logger);
         var connections = new Dictionary<string, Connection>
         {
             { "conn1", new Connection { Type = DatabaseType.PostgreSQL, ConnectionString = "CS1" } }
@@ -67,7 +71,7 @@ public class QueryDispatcherTests
     [Fact]
     public void InitializeExecutors_Throws_WhenExecutorTypeNotFound()
     {
-        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() });
+        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() }, _logger);
         var connections = new Dictionary<string, Connection>
         {
             { "conn1", new Connection { Type = DatabaseType.Sqlite, ConnectionString = "CS1" } }
@@ -79,7 +83,7 @@ public class QueryDispatcherTests
     [Fact]
     public async Task QueryAsync_ReturnsResult_WhenInitialized()
     {
-        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() });
+        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() }, _logger);
         var connections = new Dictionary<string, Connection>
         {
             { "conn1", new Connection { Type = DatabaseType.PostgreSQL, ConnectionString = "CS1" } }
@@ -100,7 +104,7 @@ public class QueryDispatcherTests
 
         // Use an executor that captures the connection string
         var fakeExecutor = new FakeQueryExecutor { Type = DatabaseType.PostgreSQL };
-        var dispatcher = new QueryDispatcher(new[] { fakeExecutor });
+        var dispatcher = new QueryDispatcher(new[] { fakeExecutor }, _logger);
 
         var connections = new Dictionary<string, Connection>
         {
@@ -124,7 +128,7 @@ public class QueryDispatcherTests
     public void BeginTransaction_Throws_WhenNotInitialized()
     {
         // Arrange
-        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() });
+        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() }, _logger);
 
         // Act + Assert
         var ex = Assert.Throws<InvalidOperationException>(() =>
@@ -137,7 +141,7 @@ public class QueryDispatcherTests
     public void BeginTransaction_Throws_WhenConnectionNotFound()
     {
         // Arrange
-        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() });
+        var dispatcher = new QueryDispatcher(new[] { new FakeQueryExecutor() }, _logger);
         var connections = new Dictionary<string, Connection>
         {
             { "conn1", new Connection { Type = DatabaseType.PostgreSQL, ConnectionString = "CS1" } }
@@ -151,3 +155,4 @@ public class QueryDispatcherTests
         Assert.Contains("not found", ex.Message);
     }
 }
+

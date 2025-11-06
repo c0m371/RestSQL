@@ -1,26 +1,41 @@
+using Microsoft.Extensions.Logging;
 using System.Text.Json.Nodes;
 using RestSQL.Application.Interfaces;
 using RestSQL.Domain;
 
 namespace RestSQL.Application;
 
-public class ResultAggregator : IResultAggregator
+public class ResultAggregator(ILogger<ResultAggregator> logger) : IResultAggregator
 {
     public JsonNode? Aggregate(
         IDictionary<string, IEnumerable<IDictionary<string, object?>>> queryResults,
         OutputField jsonStructure)
     {
+        logger.LogDebug("Aggregating results for structure: {type} isArray={isArray} queryName={q}", jsonStructure.Type, jsonStructure.IsArray, jsonStructure.QueryName);
+
         if (jsonStructure.IsArray)
             return ProcessArray(queryResults, jsonStructure, null);
 
         if (jsonStructure.QueryName is null)
+        {
+            logger.LogError("Root object has no QueryName defined");
             throw new ArgumentException("Root object has no QueryName defined", nameof(jsonStructure));
+        }
 
         if (!queryResults.TryGetValue(jsonStructure.QueryName, out var queryResult))
+        {
+            logger.LogError("Query result '{name}' not found", jsonStructure.QueryName);
             throw new ArgumentException($"Query result '{jsonStructure.QueryName}' not found", nameof(jsonStructure));
+        }
 
         var firstResult = queryResult.FirstOrDefault();
-        return firstResult is null ? null : ProcessRow(queryResults, firstResult, jsonStructure);
+        if (firstResult is null)
+        {
+            logger.LogDebug("No rows returned for root query '{name}', returning null", jsonStructure.QueryName);
+            return null;
+        }
+
+        return ProcessRow(queryResults, firstResult, jsonStructure);
     }
 
     private JsonArray ProcessArray(
