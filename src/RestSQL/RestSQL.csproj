@@ -8,8 +8,8 @@
     <IsPackable>true</IsPackable>
     
     <!-- NuGet Package Metadata -->
-    <PackageId>Comet1.RestSql</PackageId>
-    <Authors>c0m371</Authors>
+    <PackageId>Comet1.RestSQL</PackageId>
+    <Authors>comet1</Authors>
     <Description>RestSQL: A lightweight .NET tool that turns SQL queries (defined in YAML) into ready-to-run REST endpoints. Works standalone or as a library, supports transactions, nested JSON output, and multiple database providers.</Description>
     <PackageTags>rest;api;sql;yaml;postgresql;mysql;sqlserver;oracle;sqlite</PackageTags>
     <PackageProjectUrl>https://github.com/c0m371/RestSQL</PackageProjectUrl>
