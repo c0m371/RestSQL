@@ -9,7 +9,7 @@ namespace RestSQL.Application;
 
 public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator resultAggregator, IRequestBodyParser requestBodyParser, ILogger<EndpointService> logger) : IEndpointService
 {
-    public async Task<JsonNode?> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
+    public async Task<EndpointResult> GetEndpointResultAsync(Endpoint endpoint, IDictionary<string, object?> parameterValues, Stream? body)
     {
         logger.LogDebug("Handling {method} {path} (status {status}) with {paramCount} initial parameters",
             endpoint.Method, endpoint.Path, endpoint.StatusCode, parameterValues.Count);
@@ -19,7 +19,7 @@ public class EndpointService(IQueryDispatcher queryDispatcher, IResultAggregator
             await ExecuteWriteOperations(endpoint, parameterValues, body).ConfigureAwait(false);
             var result = await ExecuteQueries(endpoint, parameterValues).ConfigureAwait(false);
             logger.LogDebug("Finished handling {method} {path}", endpoint.Method, endpoint.Path);
-            return result;
+            return EndpointResult.Success(result);
         }
         catch (Exception ex)
         {

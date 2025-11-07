@@ -30,6 +30,24 @@ endpoints:
           queryName: tags
           columnName: tag
           linkColumn: post_id
+
+  - path: /api/posts/{id}
+    method: GET
+    statusCode: 200
+    statusCodeOnEmptyResult: 404
+    sqlQueries:
+      posts:
+        connectionName: blog
+        sql: >
+          select id post_id, title, description, creation_date, username
+          from posts
+          where id = :id::int;
+      tags: *tagsQuery
+    outputStructure:
+      type: Object
+      isArray: false
+      queryName: posts
+      fields: *postFields
         
   - path: /api/posts
     method: POST

@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using RestSQL.Application.Interfaces;
 using RestSQL.Domain;
 using YamlDotNet.Serialization;

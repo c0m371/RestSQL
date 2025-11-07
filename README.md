@@ -169,6 +169,7 @@ endpoints:
   - path: /api/posts/{id}
     method: GET
     statusCode: 200
+    statusCodeOnEmptyResult: 404
     sqlQueries:
       posts:
         connectionName: blog

@@ -19,6 +19,9 @@ try
 
     var app = builder.Build();
 
+    // Register global exception handling middleware early in the pipeline
+    app.UseMiddleware<RestSQL.Api.Middleware.ExceptionHandlingMiddleware>();
+
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
     {

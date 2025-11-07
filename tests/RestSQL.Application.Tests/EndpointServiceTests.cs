@@ -82,7 +82,9 @@ public class EndpointServiceTests
         var result = await _service.GetEndpointResultAsync(endpoint, parameters, null);
 
         // Assert
-        Assert.Equal(expectedJson, result);
+        Assert.NotNull(result);
+        Assert.True(result.HasData);
+        Assert.Equal(expectedJson, result.Data);
         _queryDispatcherMock.VerifyAll();
         _resultAggregatorMock.VerifyAll();
     }
@@ -116,7 +118,8 @@ public class EndpointServiceTests
         var result = await _service.GetEndpointResultAsync(endpoint, parameters, null);
 
         // Assert
-        Assert.Null(result);
+        Assert.Null(result.Data);
+        Assert.False(result.HasData);
         _resultAggregatorMock.VerifyAll();
     }
 
@@ -162,7 +165,9 @@ public class EndpointServiceTests
         var result = await _service.GetEndpointResultAsync(endpoint, parameters, null);
 
         // Assert
-        Assert.Equal(expectedJson, result);
+        Assert.NotNull(result);
+        Assert.True(result.HasData);
+        Assert.Equal(expectedJson, result.Data);
         _queryDispatcherMock.VerifyAll();
         _resultAggregatorMock.VerifyAll();
     }
@@ -484,7 +489,7 @@ public class EndpointServiceTests
     }
 
     [Fact]
-    public async Task GetEndpointResult_ShouldReturnNullWhenOutputStructureNull()
+    public async Task GetEndpointResult_ShouldReturnEmptyResultWhenOutputStructureNull()
     {
         // Arrange
         var endpoint = new Endpoint
@@ -526,12 +531,114 @@ public class EndpointServiceTests
         var result = await _service.GetEndpointResultAsync(endpoint, new Dictionary<string, object?>(), null);
 
         // Assert
-
-        // Should return null
-        Assert.Null(result);
+        Assert.NotNull(result);
+        Assert.Null(result.Data);
+        Assert.False(result.HasData);
+        
         // Aggregator should not be called
         _resultAggregatorMock.Verify(a =>
             a.Aggregate(It.IsAny<IDictionary<string, IEnumerable<IDictionary<string, object?>>>>(), It.IsAny<OutputField>()),
             Times.Never);
+    }
+
+    [Fact]
+    public async Task GetEndpointResult_ShouldReturnEmptyResult_WhenQueryReturnsEmptyArray()
+    {
+        // Arrange
+        var endpoint = new Endpoint
+        {
+            Path = "/empty",
+            Method = "GET",
+            StatusCode = 200,
+            SqlQueries = new Dictionary<string, SqlQuery>
+            {
+                ["query1"] = new SqlQuery { ConnectionName = "conn1", Sql = "SELECT * FROM empty" }
+            },
+            OutputStructure = new OutputField
+            {
+                Type = OutputFieldType.Object,
+                IsArray = true,
+                QueryName = "query1"
+            }
+        };
+
+        var parameters = new Dictionary<string, object?>();
+        var emptyResult = new List<Dictionary<string, object?>>();
+
+        _queryDispatcherMock
+            .Setup(q => q.QueryAsync("conn1", "SELECT * FROM empty", parameters))
+            .ReturnsAsync(emptyResult);
+
+        _resultAggregatorMock
+            .Setup(a => a.Aggregate(
+                It.Is<IDictionary<string, IEnumerable<IDictionary<string, object?>>>>(
+                    d => d.ContainsKey("query1")
+                ),
+                endpoint.OutputStructure))
+            .Returns(new JsonArray());
+
+        // Act
+        var result = await _service.GetEndpointResultAsync(endpoint, parameters, null);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Data);
+        Assert.False(result.HasData);
+        _queryDispatcherMock.VerifyAll();
+        _resultAggregatorMock.VerifyAll();
+    }
+
+    [Fact]
+    public async Task GetEndpointResult_ShouldReturnDataResult_WhenQueryReturnsData()
+    {
+        // Arrange
+        var endpoint = new Endpoint
+        {
+            Path = "/data",
+            Method = "GET",
+            StatusCode = 200,
+            SqlQueries = new Dictionary<string, SqlQuery>
+            {
+                ["query1"] = new SqlQuery { ConnectionName = "conn1", Sql = "SELECT * FROM data" }
+            },
+            OutputStructure = new OutputField
+            {
+                Type = OutputFieldType.Object,
+                IsArray = true,
+                QueryName = "query1"
+            }
+        };
+
+        var parameters = new Dictionary<string, object?>();
+        var queryResult = new List<Dictionary<string, object?>>
+        {
+            new() { ["id"] = 1, ["name"] = "Test" }
+        };
+
+        _queryDispatcherMock
+            .Setup(q => q.QueryAsync("conn1", "SELECT * FROM data", parameters))
+            .ReturnsAsync(queryResult);
+
+        var expectedJson = new JsonArray();
+        expectedJson.Add(JsonNode.Parse("""{"id":1,"name":"Test"}"""));
+
+        _resultAggregatorMock
+            .Setup(a => a.Aggregate(
+                It.Is<IDictionary<string, IEnumerable<IDictionary<string, object?>>>>(
+                    d => d.ContainsKey("query1")
+                ),
+                endpoint.OutputStructure))
+            .Returns(expectedJson);
+
+        // Act
+        var result = await _service.GetEndpointResultAsync(endpoint, parameters, null);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Data);
+        Assert.True(result.HasData);
+        Assert.Equal(expectedJson, result.Data);
+        _queryDispatcherMock.VerifyAll();
+        _resultAggregatorMock.VerifyAll();
     }
 }

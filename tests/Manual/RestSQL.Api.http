@@ -19,6 +19,10 @@ GET {{RestSQL.Api_HostAddress}}/api/posts
 Accept: application/json
 
 ###
+GET {{RestSQL.Api_HostAddress}}/api/posts/5548
+Accept: application/json
+
+###
 POST {{RestSQL.Api_HostAddress}}/api/posts
 Content-Type: application/json
 

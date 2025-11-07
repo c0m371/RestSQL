@@ -16,7 +16,12 @@ public static class EndpointMapper
 
                 var result = await endpointService.GetEndpointResultAsync(endpoint, parameters, request.Body).ConfigureAwait(false);
 
-                return Results.Json(result, statusCode: endpoint.StatusCode);
+                return Results.Json(
+                    result.Data,
+                    statusCode: endpoint.StatusCodeOnEmptyResult is not null && !result.HasData 
+                        ? endpoint.StatusCodeOnEmptyResult 
+                        : endpoint.StatusCode
+                    );
             });
         }
     }
