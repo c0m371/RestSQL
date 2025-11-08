@@ -1,4 +1,4 @@
-name: nuget
+name: Push to nuget and docker
 
 on:
   push:
@@ -25,6 +25,7 @@ jobs:
       new_version: ${{ steps.tab_bump.outputs.new_tag }}
 
   package-and-publish-lib:
+    name: Pack and push to nuget
     runs-on: ubuntu-latest
     needs: generate-version
 
