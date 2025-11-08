@@ -25,15 +25,22 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\RestSQL.Application\RestSQL.Application.csproj" />
-    <ProjectReference Include="..\RestSQL.Domain\RestSQL.Domain.csproj" />
-    <ProjectReference Include="..\RestSQL.Infrastructure.Dapper\RestSQL.Infrastructure.Dapper.csproj" />
-    <ProjectReference Include="..\RestSQL.Infrastructure.MySql\RestSQL.Infrastructure.MySql.csproj" />
-    <ProjectReference Include="..\RestSQL.Infrastructure.Oracle\RestSQL.Infrastructure.Oracle.csproj" />
-    <ProjectReference Include="..\RestSQL.Infrastructure.PostgreSQL\RestSQL.Infrastructure.PostgreSQL.csproj" />
-    <ProjectReference Include="..\RestSQL.Infrastructure.Sqlite\RestSQL.Infrastructure.Sqlite.csproj" />
-    <ProjectReference Include="..\RestSQL.Infrastructure.SqlServer\RestSQL.Infrastructure.SqlServer.csproj" />
-    <ProjectReference Include="..\RestSQL.Infrastructure\RestSQL.Infrastructure.csproj" />
+    <ProjectReference Include="..\RestSQL.Application\RestSQL.Application.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\RestSQL.Domain\RestSQL.Domain.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\RestSQL.Infrastructure.Dapper\RestSQL.Infrastructure.Dapper.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\RestSQL.Infrastructure.MySql\RestSQL.Infrastructure.MySql.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\RestSQL.Infrastructure.Oracle\RestSQL.Infrastructure.Oracle.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\RestSQL.Infrastructure.PostgreSQL\RestSQL.Infrastructure.PostgreSQL.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\RestSQL.Infrastructure.Sqlite\RestSQL.Infrastructure.Sqlite.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\RestSQL.Infrastructure.SqlServer\RestSQL.Infrastructure.SqlServer.csproj" PrivateAssets="all" />
+    <ProjectReference Include="..\RestSQL.Infrastructure\RestSQL.Infrastructure.csproj" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Tenekon.MSBuild.Packaging.ProjectBuildInPackage" Version="2.0.0">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
   </ItemGroup>
 
 </Project>
