@@ -1,16 +1,56 @@
-name: Docker
+name: nuget
 
 on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version tag to use for the image (optional). If omitted the workflow will generate a tag.'
-        required: false
+  push:
+    branches: [main]
 
 jobs:
-  build-push:
-    name: Build, Test and Push Docker Image
+  generate-version:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: GitHub Tag Bump
+        id: tab_bump
+        uses: anothrNick/github-tag-action@1.71.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          INITIAL_VERSION: 0.0.0
+          DEFAULT_BUMP: patch
+
+    outputs:
+      new_version: ${{ steps.tab_bump.outputs.new_tag }}
+
+  package-and-publish-lib:
+    runs-on: ubuntu-latest
+    needs: generate-version
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Generate NuGet package
+        run: |
+          dotnet pack src/RestSQL/ \
+          --configuration Release \
+          -p:PackageVersion=${{ needs.generate-version.outputs.new_version }} \
+          -p:RepositoryUrl=https://github.com/c0m371/RestSQL \
+          -p:IncludeReferencedProjects=true \
+          -o packages
+
+      - name: Publish NuGet package
+        run: dotnet nuget push packages/*.nupkg --api-key ${{ secrets.NUGET }} --source https://api.nuget.org/v3/index.json
+  build-push:
+    name: Build and Push Docker Image
+    runs-on: ubuntu-latest
+    needs: generate-version
 
     steps:
       # 1. Checkout source code
@@ -31,37 +71,14 @@ jobs:
           key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: ${{ runner.os }}-buildx-
 
-      # 4. Generate image version (make Docker image tag match NuGet package tag)
-      # only generate a tag when this run was NOT triggered via workflow_dispatch with an explicit version
-      - name: Generate image version
-        id: tag_bump
-        if: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.version == '' }}
-        uses: anothrNick/github-tag-action@1.71.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INITIAL_VERSION: 0.0.0
-          DEFAULT_BUMP: patch
-
-      # 5. Extract metadata
+      # 4. Extract metadata
       - name: Extract metadata
         id: meta
         run: |
           echo "REPO_NAME=${GITHUB_REPOSITORY##*/}" >> "$GITHUB_OUTPUT"
           echo "SHORT_SHA=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
-      # 5. Determine final image tag
-      - name: Determine image tag
-        id: set_tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ -n "${{ github.event.inputs.version }}" ]; then
-            echo "image_tag=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
-          elif [ -n "${{ steps.tag_bump.outputs.new_tag }}" ]; then
-            echo "image_tag=${{ steps.tag_bump.outputs.new_tag }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "image_tag=${{ steps.meta.outputs.SHORT_SHA }}" >> "$GITHUB_OUTPUT"
-          fi
-
-      # 6. Login to Docker Hub
+      # 5. Login to Docker Hub
       - name: Log in to Docker Hub
         uses: docker/login-action@v3
         with:
@@ -79,6 +96,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           tags: |
             ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_PROJECT_NAME }}:latest
-            ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_PROJECT_NAME }}:${{ steps.set_tag.outputs.image_tag }}
+            ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKERHUB_PROJECT_NAME }}:${{ needs.generate-version.outputs.new_version }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache,mode=max
