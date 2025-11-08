@@ -42,6 +42,7 @@ jobs:
           --configuration Release \
           -p:PackageVersion=${{ needs.generate-version.outputs.new_version }} \
           -p:RepositoryUrl=https://github.com/c0m371/RestSQL \
+          -p:IncludeReferencedProjects=true \
           -o packages
 
       - name: Publish NuGet package
