@@ -1,4 +1,5 @@
-# RestSQL Documentation
+# RestSQL ![NuGet Version](https://img.shields.io/nuget/v/Comet1.RestSQL) ![Docker Image Version](https://img.shields.io/docker/v/cometone/restsql)
+
 
 RestSQL is a lightweight .NET tool that turns SQL queries (defined in YAML) into ready-to-run REST endpoints. Works standalone or as a library, supports transactions, nested JSON output, and multiple database providers.
 
@@ -7,6 +8,8 @@ RestSQL is a lightweight .NET tool that turns SQL queries (defined in YAML) into
 There are two ways to use RestSQL:
 
 ### 1. Standalone API (Using RestSQL.Api)
+
+#### Build from source
 
 The simplest way to get started is using the pre-built API project:
 
@@ -38,6 +41,38 @@ cd src/RestSQL.Api
 dotnet run
 ```
 
+#### Alternatively, use docker 
+![Docker Image Version](https://img.shields.io/docker/v/cometone/restsql)
+
+
+Set the `RestSQL:ConfigFolder` key using the environment variable name `RestSQL__ConfigFolder` (double underscore maps to a colon in ASP.NET configuration).
+
+Example Docker run (mount local configs and set env):
+
+```sh
+docker run --rm -p 7017:80 \
+  -v $(pwd)/my-yaml-configs:/app/config \
+  -e RestSQL__ConfigFolder=/app/config \
+  cometone/restsql-api:latest
+```
+
+Running inside containers: connection string tips
+
+When your API runs inside Docker, the database host in connection strings must be reachable from the container. A few common patterns:
+
+- Docker Desktop (Windows/macOS): use `host.docker.internal` to reach services running on the host machine. Example Postgres connection string:
+
+  `Host=host.docker.internal;Port=5432;Database=mydb;Username=user;Password=pass`
+
+- Linux Docker (host.docker.internal): older Docker engines on Linux don't provide `host.docker.internal` by default. You can add it at container startup with `--add-host` (Docker 20.10+ with host-gateway):
+
+  ```sh
+  docker run --add-host=host.docker.internal:host-gateway \
+    -e RestSQL__ConfigFolder=/app/config \
+    -v $(pwd)/my-yaml-configs:/app/config \
+    cometone/restsql-api:latest
+  ```
+
 ### 2. Library Usage (Adding to Existing Project)
 
 Add RestSQL to your ASP.NET Core project:
@@ -49,6 +84,9 @@ builder.Services.AddRestSQL();
 // Configure middleware
 app.UseRestSQL("path/to/config/folder");
 ```
+
+Either link the project via the source code, or use Nuget 
+![NuGet Version](https://img.shields.io/nuget/v/Comet1.RestSQL)
 
 ## Configuration
 

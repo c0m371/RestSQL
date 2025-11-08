@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Npgsql;
 
 namespace RestSQL.Api.Middleware;
 

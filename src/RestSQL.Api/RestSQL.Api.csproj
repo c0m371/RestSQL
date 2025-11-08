@@ -12,6 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\RestSQL.Domain\RestSQL.Domain.csproj" />
     <ProjectReference Include="..\RestSQL\RestSQL.csproj" />
   </ItemGroup>
 
