@@ -18,4 +18,7 @@ RUN dotnet publish "./RestSQL.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publis
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
+# Include repository README in the image so it can be used as the Docker Hub description
+# (the build context for this workflow is the repository root, so README.md is available under /src in the build stage)
+COPY --from=build /src/README.md /app/README.md
 ENTRYPOINT ["dotnet", "RestSQL.Api.dll"]

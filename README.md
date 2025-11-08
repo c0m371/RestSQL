@@ -1,5 +1,4 @@
-# RestSQL ![NuGet Version](https://img.shields.io/nuget/v/Comet1.RestSQL) ![Docker Image Version](https://img.shields.io/docker/v/cometone/restsql)
-
+# RestSQL [![Nuget](https://img.shields.io/nuget/v/Comet1.RestSQL)](https://www.nuget.org/packages/Comet1.RestSQL) [![Docker](https://img.shields.io/docker/v/cometone/restsql)](https://hub.docker.com/r/cometone/restsql)
 
 RestSQL is a lightweight .NET tool that turns SQL queries (defined in YAML) into ready-to-run REST endpoints. Works standalone or as a library, supports transactions, nested JSON output, and multiple database providers.
 
@@ -42,7 +41,7 @@ dotnet run
 ```
 
 #### Alternatively, use docker 
-![Docker Image Version](https://img.shields.io/docker/v/cometone/restsql)
+[![Docker](https://img.shields.io/docker/v/cometone/restsql)](https://hub.docker.com/r/cometone/restsql)
 
 
 Set the `RestSQL:ConfigFolder` key using the environment variable name `RestSQL__ConfigFolder` (double underscore maps to a colon in ASP.NET configuration).

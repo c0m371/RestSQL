@@ -27,6 +27,9 @@ jobs:
   package-and-publish-lib:
     runs-on: ubuntu-latest
     needs: generate-version
+    permissions:
+      contents: write
+      workflows: write
 
     steps:
       - uses: actions/checkout@v2
@@ -47,3 +50,13 @@ jobs:
 
       - name: Publish NuGet package
         run: dotnet nuget push packages/*.nupkg --api-key ${{ secrets.NUGET }} --source https://api.nuget.org/v3/index.json
+
+      - name: Trigger Docker workflow
+        uses: peter-evans/workflow-dispatch@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          workflow: .github/workflows/docker.yaml
+          ref: main
+          inputs: |
+            version: ${{ needs.generate-version.outputs.new_version }}
