@@ -1,7 +1,12 @@
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using RestSQL.Application.Interfaces;
 using Moq;
+using Microsoft.AspNetCore.Builder;
+using RestSQL.Domain;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.TestHost;
+using Microsoft.AspNetCore.Routing;
 
 namespace RestSQL.Tests;
 
@@ -16,7 +21,7 @@ public class EndpointMapperTests
             Path = "/test",
             Method = "GET",
             StatusCode = 200,
-            ReturnNotFoundOnEmptyResult = true,
+            StatusCodeOnEmptyResult = 404,
             OutputStructure = new Domain.OutputField
             {
                 Type = Domain.OutputFieldType.Object,
@@ -32,15 +37,14 @@ public class EndpointMapperTests
                 It.IsAny<Stream>()))
             .ReturnsAsync(Domain.EndpointResult.Empty());
 
-        var app = CreateTestApplication(endpoint, endpointServiceMock.Object);
-        var context = new DefaultHttpContext();
+        using var server = CreateTestServer(endpoint, endpointServiceMock.Object);
+        using var client = server.CreateClient();
 
         // Act
-        var handler = app.RequestDelegate;
-        await handler(context);
+        var response = await client.GetAsync("/test");
 
         // Assert
-        Assert.Equal(StatusCodes.Status404NotFound, context.Response.StatusCode);
+        Assert.Equal(StatusCodes.Status404NotFound, (int)response.StatusCode);
     }
 
     [Fact]
@@ -52,7 +56,6 @@ public class EndpointMapperTests
             Path = "/test",
             Method = "GET",
             StatusCode = 200,
-            ReturnNotFoundOnEmptyResult = false,
             OutputStructure = new Domain.OutputField
             {
                 Type = Domain.OutputFieldType.Object,
@@ -68,15 +71,14 @@ public class EndpointMapperTests
                 It.IsAny<Stream>()))
             .ReturnsAsync(Domain.EndpointResult.Empty());
 
-        var app = CreateTestApplication(endpoint, endpointServiceMock.Object);
-        var context = new DefaultHttpContext();
+        using var server = CreateTestServer(endpoint, endpointServiceMock.Object);
+        using var client = server.CreateClient();
 
         // Act
-        var handler = app.RequestDelegate;
-        await handler(context);
+        var response = await client.GetAsync("/test");
 
         // Assert
-        Assert.Equal(StatusCodes.Status200OK, context.Response.StatusCode);
+        Assert.Equal(StatusCodes.Status200OK, (int)response.StatusCode);
     }
 
     [Fact]
@@ -88,7 +90,7 @@ public class EndpointMapperTests
             Path = "/test",
             Method = "GET",
             StatusCode = 201,
-            ReturnNotFoundOnEmptyResult = true, // Should be ignored when there is data
+            StatusCodeOnEmptyResult = 404,
             OutputStructure = new Domain.OutputField
             {
                 Type = Domain.OutputFieldType.Object,
@@ -105,34 +107,39 @@ public class EndpointMapperTests
                 It.IsAny<Stream>()))
             .ReturnsAsync(Domain.EndpointResult.Success(data));
 
-        var app = CreateTestApplication(endpoint, endpointServiceMock.Object);
-        var context = new DefaultHttpContext();
+        using var server = CreateTestServer(endpoint, endpointServiceMock.Object);
+        using var client = server.CreateClient();
 
         // Act
-        var handler = app.RequestDelegate;
-        await handler(context);
+        var response = await client.GetAsync("/test");
 
         // Assert
-        Assert.Equal(StatusCodes.Status201Created, context.Response.StatusCode);
+        Assert.Equal(StatusCodes.Status201Created, (int)response.StatusCode);
     }
 
-    private static WebApplication CreateTestApplication(Domain.Endpoint endpoint, IEndpointService endpointService)
+    private static TestServer CreateTestServer(Domain.Endpoint endpoint, IEndpointService endpointService)
     {
-        var builder = WebApplication.CreateBuilder();
-        var app = builder.Build();
-        
-        var config = new Domain.Config
-        {
-            Endpoints = new[] { endpoint }
-        };
+        var builder = new WebHostBuilder()
+            .ConfigureServices(services =>
+            {
+                services.AddRouting();
+                services.AddSingleton(endpointService);
+            })
+            .Configure(app =>
+            {
+                app.UseRouting();
+                app.UseEndpoints(endpoints =>
+                {
+                    var config = new Domain.Config
+                    {
+                        Endpoints = new[] { endpoint },
+                        Connections = new Dictionary<string, Connection>()
+                    };
 
-        EndpointMapper.MapEndpoints(app, config);
-        
-        // Replace the registered service with our mock
-        app.Services = new ServiceCollection()
-            .AddSingleton(endpointService)
-            .BuildServiceProvider();
+                    EndpointMapper.MapEndpoints(endpoints, config);
+                });
+            });
 
-        return app;
+        return new TestServer(builder);
     }
 }
