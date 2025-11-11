@@ -93,3 +93,4 @@ public abstract class IntegrationTestBase<TFixture> : IAsyncLifetime, IClassFixt
         File.WriteAllText(connectionsFile, text);
     }
 }
+

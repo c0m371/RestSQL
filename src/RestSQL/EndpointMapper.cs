@@ -1,6 +1,4 @@
 using RestSQL.Application.Interfaces;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.AspNetCore.Http;
 
 namespace RestSQL;
 
@@ -10,13 +8,26 @@ public static class EndpointMapper
     {
         foreach (var endpoint in config.Endpoints)
         {
-            builder.MapMethods(endpoint.Path, new[] { endpoint.Method }, CreateHandlerDelegate(endpoint));
+            var endpointBuilder = builder.MapMethods(endpoint.Path, [endpoint.Method], CreateHandlerDelegate(endpoint));
+            AddAuthorization(endpoint, endpointBuilder);
+        }
+    }
+
+    internal static void AddAuthorization(Domain.Endpoint endpoint, RouteHandlerBuilder endpointBuilder)
+    {
+        if (endpoint.Authorize)
+        {
+            List<string> scopes = [Constants.RequireAuthenticatedUser];
+            if (endpoint.AuthorizationScope is not null)
+                scopes.Add(endpoint.AuthorizationScope);
+
+            endpointBuilder.RequireAuthorization(scopes.ToArray());
         }
     }
 
     internal static Func<HttpRequest, IEndpointService, Task<IResult>> CreateHandlerDelegate(Domain.Endpoint endpoint)
     {
-        return async (HttpRequest request, IEndpointService endpointService) =>
+        return async (request, endpointService) =>
         {
             var parameters = new Dictionary<string, object?>();
             request.RouteValues.ToList().ForEach(kvp => parameters.Add(kvp.Key, kvp.Value));
