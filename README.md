@@ -134,10 +134,12 @@ authentication:
   audience: https://api.example.com
   scopes:
     - write:posts
+```
 
 ### Endpoint Configuration
 
 Define REST endpoints. Endpoints can include optional authorization settings.
+See section "Example blog API" below.
 
 ## Example Blog API
 
