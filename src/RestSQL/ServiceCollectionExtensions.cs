@@ -86,7 +86,7 @@ public static class ServiceCollectionExtensions
                 foreach (var scope in config.Authentication.Scopes)
                     options.AddPolicy(
                         scope,
-                        policy => policy.RequireClaim(scope)
+                        policy => policy.RequireClaim("scope", scope)
                     );
 
                 options.AddPolicy(Constants.RequireAuthenticatedUser, policy => policy.RequireAuthenticatedUser());

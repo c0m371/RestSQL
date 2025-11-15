@@ -36,6 +36,12 @@ endpoints:
     outputStructure: {}
 ";
 
+    private string AuthYaml => @"
+authentication:
+  authority: authority
+  audience: audience  
+";
+
     // --- Original Tests (Slightly refactored for clarity) ---
 
     [Fact]
@@ -84,6 +90,50 @@ endpoints:
             Assert.True(config.Connections.ContainsKey("conn2"));
             Assert.Contains(config.Endpoints, e => e.Path == "/test1");
             Assert.Contains(config.Endpoints, e => e.Path == "/test2");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void Read_ThrowsInvalidOperationException_WhenMultipleAuth()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            File.WriteAllText(Path.Combine(tempDir, "a.yaml"), AuthYaml);
+            File.WriteAllText(Path.Combine(tempDir, "b.yaml"), AuthYaml);
+
+            var reader = new YamlConfigReader(_loggerMock.Object);
+            var ex = Assert.Throws<InvalidOperationException>(() => reader.Read(tempDir));
+            Assert.Contains("Only a single authentication config should be provided", ex.Message);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
+    [Fact]
+    public void Read_ReturnsAuthConfig_WhenOnlyOne()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
+        Directory.CreateDirectory(tempDir);
+
+        try
+        {
+            File.WriteAllText(Path.Combine(tempDir, "a.yaml"), AuthYaml);
+
+            var reader = new YamlConfigReader(_loggerMock.Object);
+            var config = reader.Read(tempDir);
+
+            Assert.NotNull(config.Authentication);
+            Assert.Equal("audience", config.Authentication.Audience);
+            Assert.Equal("authority", config.Authentication.Authority);
         }
         finally
         {

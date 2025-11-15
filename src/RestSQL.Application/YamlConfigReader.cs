@@ -10,7 +10,7 @@ namespace RestSQL.Application;
 public class YamlConfigReader(ILogger<YamlConfigReader> logger) : IYamlConfigReader
 {
     private readonly ConcurrentDictionary<string, Config> configCache = new();
-    private readonly object cacheLock = new(); 
+    private readonly object cacheLock = new();
 
     public Config Read(string path)
     {
@@ -31,16 +31,16 @@ public class YamlConfigReader(ILogger<YamlConfigReader> logger) : IYamlConfigRea
             }
 
             logger.LogInformation("Config not found in cache. Loading and merging files from: {path}", path);
-            
+
             var mergedConfig = ReadAndMergeFiles(path);
 
             configCache.TryAdd(path, mergedConfig);
             logger.LogInformation("Config successfully loaded and cached for path: {path}", path);
-            
+
             return mergedConfig;
         }
     }
-    
+
     private Config ReadAndMergeFiles(string path)
     {
         if (!Directory.Exists(path))
@@ -64,15 +64,26 @@ public class YamlConfigReader(ILogger<YamlConfigReader> logger) : IYamlConfigRea
             return deserializer.Deserialize<Config>(reader);
         });
 
-         var mergedConfig = new Config
+        var authConfigs = allConfigs
+            .Where(c => c.Authentication != null)
+            .Select(c => c.Authentication)
+            .ToList();
+            
+        if (authConfigs.Count > 1)
+            throw new InvalidOperationException("Only a single authentication config should be provided");
+
+        var authConfig = authConfigs.SingleOrDefault();
+
+        var mergedConfig = new Config
         {
             Connections = allConfigs.SelectMany(c => c.Connections).ToDictionary(),
-            Endpoints = [.. allConfigs.SelectMany(c => c.Endpoints)]
+            Endpoints = [.. allConfigs.SelectMany(c => c.Endpoints)],
+            Authentication = authConfig
         };
 
         logger.LogDebug("Merged config: {connections} connections, {endpoints} endpoints",
             mergedConfig.Connections.Count, mergedConfig.Endpoints.Count);
-        
+
         return mergedConfig;
     }
 }
