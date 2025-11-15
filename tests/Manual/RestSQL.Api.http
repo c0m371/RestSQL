@@ -24,10 +24,22 @@ Accept: application/json
 
 ###
 POST {{RestSQL.Api_HostAddress}}/api/posts
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6IlFUaEZNREJHUXpWRk9ETTNPRE15UkVaQk5EUTBRamt3TVVSRE5qaENSVE5ETVVJMFFVUkJOQSJ9.eyJpc3MiOiJodHRwczovL2NvZW5lLmV1LmF1dGgwLmNvbS8iLCJzdWIiOiJaMHZrcU5xTmRVcmhHVmJxaklkVFhFS3IxdWJHOXFtM0BjbGllbnRzIiwiYXVkIjoiaHR0cHM6Ly9yZXN0c3FsLnRlc3QiLCJpYXQiOjE3NjMyMDA4MTIsImV4cCI6MTc2MzI4NzIxMiwic2NvcGUiOiJ3cml0ZTpwb3N0cyIsImd0eSI6ImNsaWVudC1jcmVkZW50aWFscyIsImF6cCI6IlowdmtxTnFOZFVyaEdWYnFqSWRUWEVLcjF1Ykc5cW0zIn0.W2aFnwRUYAb9ks7gXpQn6Gms7zDGZQRMjZjfNHgD7-pXvLJ4FH2hIa3YBwZs9KJhjxvyKiDI5nqTJf2wetgvh8Q_mNiYG4toEQ_IEpt9DVXYsBOEiwCPErRTCPLe2JoAts3_13tH3eFte6JSzP1y2e9WLMDoBlX7Mhf9shgQWfJkUC_PBa1kg9ymKwxYHuN3aPyqL167uSjSBGbW-3zztPPCumVsgtWPFJwS2g_NBR1g1dyWylz24NO31SI60cIQVHu_yt49G9sYrQFzLJRgdyALyTuOpfjLFCHkDl5ebBPy4a6TuKCQ2fQ7St0cLfeQDSXduHm8fSF9ZnZYOlB4uQ
 Content-Type: application/json
 
 {
     "title": "New post from tom",
     "description": "New post from tom: some kind of description here",
     "username": "tom"
+}
+
+###
+POST https://coene.eu.auth0.com/oauth/token
+Content-Type: application/json
+
+{
+    "client_id":"Z0vkqNqNdUrhGVbqjIdTXEKr1ubG9qm3",
+    "client_secret":"FZCIrBEI38ihmqSJwnWzdT81QDpR8QsvQfkqltPLGoUU9vKyTUfWSEtYO9GeeLY-",
+    "audience":"https://restsql.test",
+    "grant_type":"client_credentials"
 }

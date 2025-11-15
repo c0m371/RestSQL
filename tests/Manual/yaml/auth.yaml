@@ -1,0 +1,5 @@
+authentication:
+  authority: https://coene.eu.auth0.com/
+  audience: https://restsql.test
+  scopes:
+    - write:posts

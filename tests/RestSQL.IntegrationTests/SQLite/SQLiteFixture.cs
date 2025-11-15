@@ -47,10 +47,10 @@ INSERT INTO users (username, first_name, last_name) VALUES
         await cmd.ExecuteNonQueryAsync();
     }
 
-    public async Task DisposeAsync()
+    public  Task DisposeAsync()
     {
-        if (isDisposed) return;
-        
+        if (isDisposed) return Task.CompletedTask;
+
         try
         {
             if (File.Exists(dbPath))
@@ -60,5 +60,7 @@ INSERT INTO users (username, first_name, last_name) VALUES
             isDisposed = true;
         }
         catch { /* best-effort */ }
+
+        return Task.CompletedTask;
     }
 }

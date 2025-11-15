@@ -52,6 +52,8 @@ endpoints:
   - path: /api/posts
     method: POST
     statusCode: 200
+    authorize: true
+    authorizationScope: write:posts
     writeOperations:
       - connectionName: blog
         sql: >

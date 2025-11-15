@@ -20,6 +20,12 @@ public static class WebApplicationExtensions
         var querydispatcher = webApplication.Services.GetService<IQueryDispatcher>()
             ?? throw new InvalidOperationException("AddRestSQL has not been called on container");
 
+        if (config.Authentication is not null)
+        {
+            webApplication.UseAuthentication();
+            webApplication.UseAuthorization();
+        }
+
         querydispatcher.InitializeExecutors(config.Connections);
         EndpointMapper.MapEndpoints(webApplication, config);
     }

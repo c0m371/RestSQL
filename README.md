@@ -49,10 +49,10 @@ Set the `RestSQL:ConfigFolder` key using the environment variable name `RestSQL_
 Example Docker run (mount local configs and set env):
 
 ```sh
-docker run --rm -p 7017:80 \
+docker run --rm -p 7017:8080 \
   -v $(pwd)/my-yaml-configs:/app/config \
   -e RestSQL__ConfigFolder=/app/config \
-  cometone/restsql-api:latest
+  cometone/restsql:latest
 ```
 
 Running inside containers: connection string tips
@@ -69,7 +69,7 @@ When your API runs inside Docker, the database host in connection strings must b
   docker run --add-host=host.docker.internal:host-gateway \
     -e RestSQL__ConfigFolder=/app/config \
     -v $(pwd)/my-yaml-configs:/app/config \
-    cometone/restsql-api:latest
+    cometone/restsql:latest
   ```
 
 ### 2. Library Usage (Adding to Existing Project)
