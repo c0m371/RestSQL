@@ -1,6 +1,6 @@
 # RestSQL [![Nuget](https://img.shields.io/nuget/v/Comet1.RestSQL)](https://www.nuget.org/packages/Comet1.RestSQL) [![Docker](https://img.shields.io/docker/v/cometone/restsql)](https://hub.docker.com/r/cometone/restsql)
 
-RestSQL is a lightweight .NET tool that turns SQL queries (defined in YAML) into ready-to-run REST endpoints. Works standalone or as a library, supports transactions, nested JSON output, and multiple database providers.
+RestSQL is a lightweight **.NET tool** that turns SQL queries (defined in **YAML**) into ready-to-run **REST endpoints**. Works standalone or as a library, supports transactions, nested JSON output, multiple database providers, and **OAuth 2.0/OpenID Connect (OIDC) authentication**.
 
 ## Getting Started
 
@@ -78,7 +78,11 @@ Add RestSQL to your ASP.NET Core project:
 
 ```csharp
 // Program.cs
-builder.Services.AddRestSQL();
+// Required services
+builder.Services.AddRestSQL(); 
+
+// Optional: Configure Authentication (read from appsettings.json or global YAML)
+builder.Services.AddRestSQLAuthentication(builder.Configuration);
 
 // Configure middleware
 app.UseRestSQL("path/to/config/folder");
@@ -120,44 +124,20 @@ connections:
     connectionString: "Data Source=local.db"
 ```
 
-### Endpoint Configuration
+### Authentication Configuration
 
-Define REST endpoints:
+For secured endpoints, define your OIDC/OAuth 2.0 configuration globally under `authentication`. This section is **optional**.
 
 ```yaml
-endpoints:
-  # Get all posts with tags
-  - path: /api/posts
-    method: GET
-    statusCode: 200
-    sqlQueries:
-      posts:
-        connectionName: blog
-        sql: >
-          select id post_id, title, description, creation_date, username
-          from posts;
-      tags: &tagsQuery
-        connectionName: blog
-        sql: >
-          select *
-          from tags;
-    outputStructure:
-      type: Object
-      isArray: true
-      queryName: posts
-      fields: &postFields
-        - { type: Long, name: id, columnName: post_id }
-        - { type: String, name: title, columnName: title }
-        - { type: String, name: description, columnName: description }
-        - { type: String, name: username, columnName: username }
-        - { type: String, name: creationDate, columnName: creation_date }
-        - type: string
-          isArray: true
-          name: tags
-          queryName: tags
-          columnName: tag
-          linkColumn: post_id
-```
+authentication:
+  authority: https://auth.example.com/
+  audience: https://api.example.com
+  scopes:
+    - write:posts
+
+### Endpoint Configuration
+
+Define REST endpoints. Endpoints can include optional authorization settings.
 
 ## Example Blog API
 
@@ -226,9 +206,12 @@ endpoints:
       fields: *postFields
 
   # Create new post, and return the created post
+  # Requires authorization
   - path: /api/posts
     method: POST
     statusCode: 200
+    authorize: true                 # Requires a valid JWT bearer token
+    authorizationScope: write:posts # Token must contain this scope claim
     writeOperations:
       - connectionName: blog
         sql: >
@@ -272,9 +255,13 @@ Response:
 ]
 ```
 
-Create post:
+Create post (with Authorization):
+You must include an `Authorization: Bearer <token>` header where the token grants the `write:posts` scope.
+
 ```sh
 POST /api/posts
+Authorization: Bearer <JWT_TOKEN_WITH_WRITE:POSTS_SCOPE>
+
 {
   "title": "PostgreSQL vs MySQL",
   "description": "A performance comparison",
