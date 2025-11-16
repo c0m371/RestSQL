@@ -1,4 +1,9 @@
-# RestSQL [![Nuget](https://img.shields.io/nuget/v/Comet1.RestSQL)](https://www.nuget.org/packages/Comet1.RestSQL) [![Docker](https://img.shields.io/docker/v/cometone/restsql)](https://hub.docker.com/r/cometone/restsql)
+# RestSQL 
+|        |                                                                                                          |
+|--------|:--------------------------------------------------------------------------------------------------------:|
+| Nuget  | [![Nuget](https://img.shields.io/nuget/v/Comet1.RestSQL)](https://www.nuget.org/packages/Comet1.RestSQL) |
+| Docker | [![Docker](https://img.shields.io/docker/v/cometone/restsql)](https://hub.docker.com/r/cometone/restsql) |
+
 
 RestSQL is a lightweight **.NET tool** that turns SQL queries (defined in **YAML**) into ready-to-run **REST endpoints**. Works standalone or as a library, supports transactions, nested JSON output, multiple database providers, and **OAuth 2.0/OpenID Connect (OIDC) authentication**.
 
@@ -78,17 +83,13 @@ Add RestSQL to your ASP.NET Core project:
 
 ```csharp
 // Program.cs
-// Required services
-builder.Services.AddRestSQL(); 
-
-// Optional: Configure Authentication (read from appsettings.json or global YAML)
-builder.Services.AddRestSQLAuthentication(builder.Configuration);
+builder.Services.AddRestSQL(builder.Configuration);
 
 // Configure middleware
-app.UseRestSQL("path/to/config/folder");
+app.UseRestSQL(builder.Configuration);
 ```
 
-Either link the project via the source code, or use Nuget 
+Either link the project via the source code, or use Nuget  
 ![NuGet Version](https://img.shields.io/nuget/v/Comet1.RestSQL)
 
 ## Configuration

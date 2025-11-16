@@ -11,9 +11,7 @@ try
     // Add services to the container.
     // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
     builder.Services.AddOpenApi();
-    builder.Services
-        .AddRestSQL()
-        .AddRestSQLAuthentication(builder.Configuration);
+    builder.Services.AddRestSQL(builder.Configuration);
 
     builder.Services.AddSerilog((services, lc) => lc
         .ReadFrom.Configuration(builder.Configuration)
@@ -33,10 +31,7 @@ try
 
     app.UseHttpsRedirection();
 
-     var configFolder = builder.Configuration.GetSection("RestSQL").GetValue<string>("ConfigFolder")
-        ?? throw new InvalidOperationException("ConfigFolder not set");
-
-    app.UseRestSQL(configFolder);
+    app.UseRestSQL(builder.Configuration);
 
     app.Run();
 }

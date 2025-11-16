@@ -6,10 +6,13 @@ namespace RestSQL;
 
 public static class WebApplicationExtensions
 {
-    public static void UseRestSQL(this WebApplication webApplication, string configFolder)
+    public static void UseRestSQL(this WebApplication webApplication, ConfigurationManager configuration)
     {
         var configReader = webApplication.Services.GetService<IYamlConfigReader>()
             ?? throw new InvalidOperationException("AddRestSQL has not been called on container");
+
+        var configFolder = configuration.GetSection("RestSQL").GetValue<string>("ConfigFolder")
+            ?? throw new InvalidOperationException("ConfigFolder not set");
 
         var config = configReader.Read(configFolder);
         UseRestSQL(webApplication, config);

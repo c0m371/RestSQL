@@ -17,7 +17,7 @@ namespace RestSQL;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddRestSQL(this IServiceCollection serviceCollection)
+    public static IServiceCollection AddRestSQL(this IServiceCollection serviceCollection, ConfigurationManager configuration)
     {
         serviceCollection.AddRestSQLApplication();
         serviceCollection.AddRestSQLInfrastructure();
@@ -27,11 +27,12 @@ public static class ServiceCollectionExtensions
         serviceCollection.AddMySql();
         serviceCollection.AddOracle();
         serviceCollection.AddSqlite();
+        serviceCollection.AddRestSQLAuthentication(configuration);
 
         return serviceCollection;
     }
 
-    public static void AddRestSQLAuthentication(this IServiceCollection serviceCollection, ConfigurationManager configuration)
+    private static void AddRestSQLAuthentication(this IServiceCollection serviceCollection, ConfigurationManager configuration)
     {
         // Always add authentication
         serviceCollection.AddAuthentication(options =>
